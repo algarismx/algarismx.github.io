@@ -25,6 +25,8 @@ function bringToFront(win) {
 }
 wins.forEach((win) => {
     win.addEventListener('mousedown', () => bringToFront(win));
+    // Touch bring-to-front (mobile)
+    win.addEventListener('touchstart', () => bringToFront(win), { passive: true });
     const tb = win.querySelector('[data-drag]');
     if (tb) {
         let sx = 0, sy = 0, ox = 0, oy = 0, dragging = false;
@@ -50,6 +52,30 @@ wins.forEach((win) => {
             win.style.top = ny + 'px';
         });
         window.addEventListener('mouseup', () => dragging = false);
+        // Touch dragging
+        tb.addEventListener('touchstart', (e) => {
+            const t = e.touches[0];
+            dragging = true;
+            bringToFront(win);
+            sx = t.clientX;
+            sy = t.clientY;
+            const r = win.getBoundingClientRect();
+            ox = r.left;
+            oy = r.top;
+        }, { passive: true });
+        window.addEventListener('touchmove', (e) => {
+            if (!dragging)
+                return;
+            const t = e.touches[0];
+            const dx = t.clientX - sx, dy = t.clientY - sy;
+            const vw = innerWidth, vh = innerHeight, ww = win.offsetWidth, wh = win.offsetHeight;
+            let nx = ox + dx, ny = oy + dy;
+            nx = Math.max(6, Math.min(vw - ww - 6, nx));
+            ny = Math.max(6, Math.min(vh - wh - 80, ny));
+            win.style.left = nx + 'px';
+            win.style.top = ny + 'px';
+        }, { passive: true });
+        window.addEventListener('touchend', () => dragging = false, { passive: true });
     }
     win.querySelectorAll('[data-close]').forEach(btn => {
         btn.addEventListener('click', () => {
