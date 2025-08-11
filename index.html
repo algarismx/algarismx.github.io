@@ -3,8 +3,8 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Ricardo Gonçalves Melgar — downware</title>
-  <meta name="description" content="Portefólio de Ricardo Gonçalves Melgar (downware) — Sound Designer, Técnico de Som e Produtor Musical em Faro, Portugal.">
+  <title>Ricardo Gonçalves Melgar — algarismx</title>
+  <meta name="description" content="Portefólio de Ricardo Gonçalves Melgar (algarismx) — Sound Designer, Técnico de Som e Produtor Musical em Faro, Portugal.">
   <style>
     :root{
       --bg: #0a0a0a;
@@ -61,7 +61,96 @@
   </style>
 </head>
 <body>
-  <!-- Aqui vai o conteúdo HTML que já te mostrei antes (Hero, Portfolio Pessoal, ETIC, Profissional, About, Contact, Footer) -->
-  <!-- Substitui os src das imagens por "foto1.jpg" e "foto2.jpg" se quiseres usar ficheiros em vez de base64 -->
+  <header>
+    <div class="container nav">
+      <div class="brand" aria-label="Brand">
+        <span class="brand-dot" aria-hidden="true"></span>
+        algarismx
+      </div>
+      <nav class="menu" aria-label="Main navigation">
+        <a href="#portfolio">Portfolio</a>
+        <a href="#etic">ETIC</a>
+        <a href="#profissional">Profissional</a>
+        <a href="#about">Sobre</a>
+        <a href="#contact">Contacto</a>
+      </nav>
+      <button class="lang-toggle" aria-label="Alternar idioma">PT</button>
+    </div>
+  </header>
+
+  <main class="container">
+    <section class="hero" aria-label="Apresentação">
+      <div>
+        <div class="eyebrow">algarismx</div>
+        <h1>Ricardo Gonçalves Melgar</h1>
+        <p class="lead">Sound Designer, Técnico de Som e Produtor Musical em Faro, Portugal.</p>
+        <div class="cta">
+          <a href="#contact" class="btn">Contactar</a>
+          <a href="https://github.com/algarismx" class="btn ghost" target="_blank" rel="noopener noreferrer">GitHub</a>
+        </div>
+      </div>
+      <img src="foto1.jpg" alt="Foto de Ricardo Gonçalves Melgar">
+    </section>
+
+    <section id="portfolio" aria-label="Portfolio Pessoal">
+      <h2>Portfolio Pessoal</h2>
+      <div class="grid two">
+        <div class="card">
+          <h3>Projeto 1</h3>
+          <p>Descrição do projeto 1.</p>
+          <a href="#">Ver mais</a>
+        </div>
+        <div class="card">
+          <h3>Projeto 2</h3>
+          <p>Descrição do projeto 2.</p>
+          <a href="#">Ver mais</a>
+        </div>
+      </div>
+    </section>
+
+    <section id="etic" aria-label="ETIC">
+      <h2>ETIC</h2>
+      <div class="card">
+        <h3>Curso de Som</h3>
+        <p>Informações sobre o curso de Som na ETIC.</p>
+      </div>
+    </section>
+
+    <section id="profissional" aria-label="Experiência Profissional">
+      <h2>Experiência Profissional</h2>
+      <div class="grid two">
+        <div class="card">
+          <h3>Empresa 1</h3>
+          <p>Descrição da experiência na empresa 1.</p>
+        </div>
+        <div class="card">
+          <h3>Empresa 2</h3>
+          <p>Descrição da experiência na empresa 2.</p>
+        </div>
+      </div>
+    </section>
+
+    <section id="about" aria-label="Sobre">
+      <h2>Sobre</h2>
+      <p>Ricardo Gonçalves Melgar é um Sound Designer, Técnico de Som e Produtor Musical sediado em Faro, Portugal. Com uma paixão pela criação sonora e produção musical, trabalha em diversos projetos que abrangem desde música a design de som para media.</p>
+      <img src="foto2.jpg" alt="Foto de Ricardo Gonçalves Melgar no estúdio" style="border-radius: var(--radius); box-shadow: var(--shadow); width:100%; max-width:400px; height:auto;">
+    </section>
+
+    <section id="contact" aria-label="Contacto">
+      <h2>Contacto</h2>
+      <p>Para consultas profissionais, colaborações ou apenas para dizer olá, pode contactar-me através do email abaixo ou das redes sociais.</p>
+      <ul>
+        <li>Email: <a href="mailto:ricardo@algarismx.pt">ricardo@algarismx.pt</a></li>
+        <li>LinkedIn: <a href="https://linkedin.com/in/algarismx" target="_blank" rel="noopener noreferrer">algarismx</a></li>
+        <li>Instagram: <a href="https://instagram.com/algarismx" target="_blank" rel="noopener noreferrer">@algarismx</a></li>
+      </ul>
+    </section>
+  </main>
+
+  <footer>
+    <div class="container" role="contentinfo">
+      <p>&copy; 2024 Ricardo Gonçalves Melgar — algarismx</p>
+    </div>
+  </footer>
 </body>
 </html>
