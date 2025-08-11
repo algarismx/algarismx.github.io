@@ -248,9 +248,80 @@ function loop() {
 }
 loop();
 const themeSelect = document.getElementById('themeSelect');
+function applyTheme(){
+    if (themeSelect && !themeSelect.dataset.init){ themeSelect.value = 'modern'; themeSelect.dataset.init = '1'; }
+    const isModern = themeSelect && themeSelect.value === 'modern';
+    document.body.classList.toggle('theme-modern', !!isModern);
+    
+    // Debug: verificar se WavesController está disponível
+    console.log('WavesController available:', !!window.WavesController);
+    console.log('Theme:', isModern ? 'modern' : 'win98');
+    
+    // Waves only on modern theme
+    if (window.WavesController){
+        if (isModern) {
+            console.log('Mounting Waves...');
+            try {
+                window.WavesController.mount();
+                console.log('Waves mounted successfully');
+            } catch (e) {
+                console.error('Error mounting Waves:', e);
+            }
+        } else {
+            console.log('Unmounting Waves...');
+            try {
+                window.WavesController.unmount();
+                console.log('Waves unmounted successfully');
+            } catch (e) {
+                console.error('Error unmounting Waves:', e);
+            }
+        }
+    } else {
+        console.warn('WavesController not found! Check if waves.js is loaded');
+        console.log('Available window objects:', Object.keys(window).filter(k => k.toLowerCase().includes('wave')));
+    }
+}
 if (themeSelect) {
-    themeSelect.addEventListener('change', () => {
-        document.body.classList.toggle('theme-modern', themeSelect.value === 'modern');
+    themeSelect.addEventListener('change', applyTheme);
+    // Forçar tema moderno por padrão no carregamento
+    themeSelect.value = 'modern';
+    themeSelect.dataset.init = '1';
+    // Aguardar mais tempo para garantir que waves.js carregou
+    setTimeout(() => {
+        console.log('Applying theme after delay...');
+        applyTheme();
+        
+        // Teste direto das Waves após 1 segundo
+        setTimeout(() => {
+            console.log('Testing Waves directly...');
+            if (window.WavesController) {
+                console.log('WavesController found, testing mount...');
+                try {
+                    window.WavesController.mount();
+                    console.log('Waves mounted successfully in test');
+                } catch (e) {
+                    console.error('Error in test mount:', e);
+                }
+            } else {
+                console.error('WavesController still not found after delay');
+            }
+        }, 1000);
+    }, 500);
+}
+// Mobile menu toggle
+const tbMenu = document.getElementById('tb-menu');
+const mobileMenu = document.getElementById('mobileMenu');
+if (tbMenu && mobileMenu){
+    tbMenu.addEventListener('click', ()=>{
+        const open = mobileMenu.getAttribute('aria-hidden') !== 'false';
+        mobileMenu.setAttribute('aria-hidden', open ? 'false' : 'true');
+        tbMenu.setAttribute('aria-expanded', (!open).toString());
+    });
+    mobileMenu.querySelectorAll('[data-open]').forEach(b=>{
+        b.addEventListener('click', ()=>{
+            mobileMenu.setAttribute('aria-hidden','true');
+            tbMenu.setAttribute('aria-expanded','false');
+        });
     });
 }
 const clockEl = document.getElementById('taskClock');

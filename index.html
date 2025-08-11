@@ -6,95 +6,6 @@
   <meta name="theme-color" content="#0a0a0a" />
   <title>Ricardo Gonçalves Melgar — algarismx</title>
   <meta name="description" content="Portfolio of Ricardo Gonçalves Melgar (algarismx) — Sound Designer, Sound Technician and Music Producer in Faro, Portugal.">
-  <style>
-    :root{
-      --bg:#008080;             /* Win98 teal */
-      --ink:#000000;            /* text black */
-      --muted:#2b2b2b;
-      --glass:rgba(18,18,18,.66);
-      --radius:14px;
-      --maxw:1200px;
-      --bar-brass:#c08a3e;      /* dynamic tint base */
-      /* Win98 palette */
-      --win-face:#c0c0c0;
-      --win-text:#000000;
-      --win-inactive-text:#222222;
-      --win-highlight:#ffffff;
-      --win-shadow:#808080;
-      --win-dark:#000000;
-      --title-inactive:#808080;
-      --title-active:#000080;
-    }
-    *{box-sizing:border-box}
-    html,body{margin:0;padding:0;background:var(--bg);color:var(--ink);font:14px/1.4 Tahoma,"Microsoft Sans Serif",system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial}
-    a{color:var(--ink);text-decoration:none}
-    a:hover{opacity:.9}
-    .container{width:100%;max-width:var(--maxw);margin:0 auto;padding:0 20px}
-
-    /* Desktop wallpaper + scrim */
-    .desktop{position:relative;min-height:100vh;overflow:hidden}
-    .wallpaper{display:none}
-    .scrim{display:none}
-
-    /* Taskbar */
-    .taskbar{position:fixed;left:0;right:0;bottom:0;height:32px;background:var(--win-face);border-top:1px solid var(--win-dark);box-shadow:inset 0 1px 0 var(--win-highlight), inset 0 -1px 0 var(--win-shadow);display:flex;align-items:center;gap:6px;padding:4px 6px}
-    .task-button{position:relative;padding:4px 10px;min-width:84px;height:24px;color:var(--win-text);cursor:pointer;background:var(--win-face);border:1px solid var(--win-dark);box-shadow:inset -1px -1px 0 var(--win-shadow), inset 1px 1px 0 var(--win-highlight);transition:none;border-radius:0}
-    .task-button:hover{filter:brightness(1.02)}
-    /* Active (opened) task */
-    .task-button.pulsing-static{box-shadow:inset 1px 1px 0 var(--win-shadow), inset -1px -1px 0 var(--win-highlight)}
-    /* Reactive pulse for Player: thin underline based on --pulse */
-    .task-button{ --pulse:0; --hue:40; }
-    .task-button.pulsing::before{content:""; position:absolute; left:0; right:0; bottom:-2px; height:2px; background:hsl(var(--hue,40) 80% 45% / .9); transform-origin:left center; transform:scaleX(var(--pulse,0));}
-
-    /* Windows */
-    .win{ --tint: var(--bar-brass); position:absolute;top:14vh;left:8vw;width:min(720px,90vw);max-width:90vw;max-height:72vh;display:flex;flex-direction:column;background:var(--win-face);border:1px solid var(--win-dark);box-shadow:inset -1px -1px 0 var(--win-shadow), inset 1px 1px 0 var(--win-highlight);border-radius:0 }
-    .win.hidden{display:none; --tint: transparent !important}
-    .titlebar{cursor:move;user-select:none;display:flex;align-items:center;justify-content:space-between;gap:8px;padding:4px 6px;height:24px;color:#fff;background: linear-gradient(180deg, var(--title-inactive), color-mix(in srgb, var(--title-inactive) 70%, #000 30%));box-shadow: inset -1px -1px 0 rgba(0,0,0,.35), inset 1px 1px 0 rgba(255,255,255,.25)}
-    .win.active .titlebar{background: linear-gradient(180deg, color-mix(in srgb, var(--tint) 70%, var(--title-active) 30%), color-mix(in srgb, var(--tint) 40%, var(--title-active) 60%))}
-    .titlebar .left{display:flex;align-items:center;gap:8px}
-    .title{letter-spacing:.2px;opacity:.95}
-    .window-controls{display:flex;gap:6px}
-    .ctl{width:20px;height:18px;border-radius:0;background:var(--win-face);color:#000;display:grid;place-items:center;cursor:pointer;border:1px solid var(--win-dark);box-shadow: inset -1px -1px 0 var(--win-shadow), inset 1px 1px 0 var(--win-highlight)}
-    .ctl:hover{filter:brightness(1.05)}
-
-    .content{padding:8px 10px;overflow:auto}
-    .content p{color:var(--win-text)}
-    .muted{color:var(--win-inactive-text)}
-
-    /* Acrylic highlight + difference mask for steampunk vibe */
-    .win::after, .win::before{content:none}
-
-    /* Lists */
-    .list{display:grid;gap:12px}
-    .item{padding:12px 0;border-bottom:1px solid rgba(255,255,255,.08)}
-    .item:last-child{border-bottom:none}
-
-    /* Z stacking */
-    .win{z-index:10}
-    .win.active{z-index:100}
-
-    /* Preloader */
-    #preloader{position:fixed;inset:0;background:#0a0a0a;display:flex;align-items:center;justify-content:center;z-index:9999;transition:opacity .35s ease}
-    .spinner{width:64px;height:64px;border-radius:50%;border:3px solid rgba(255,255,255,.12);border-top-color:#fff;animation:spin 1s linear infinite}
-    @keyframes spin{to{transform:rotate(360deg)}}
-
-    /* Player */
-    .player{display:grid;grid-template-columns:1fr auto;align-items:center;gap:12px;min-width:0}
-    .player .row{display:flex;align-items:center;gap:8px;min-width:0;flex-wrap:wrap}
-    .btn-rect{padding:4px 8px;border-radius:0;color:var(--win-text);cursor:pointer;background:var(--win-face);border:1px solid var(--win-dark);box-shadow: inset -1px -1px 0 var(--win-shadow), inset 1px 1px 0 var(--win-highlight)}
-    .btn-rect:hover{filter:brightness(1.05)}
-    .track{font-variant-numeric:tabular-nums;letter-spacing:.3px;opacity:.9;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:48ch}
-    .vu{display:flex;gap:2px;align-items:end;height:12px}
-    .bar{width:3px;height:4px;background:#9cff7a;opacity:.85;transition:height .08s linear}
-    .player.playing .bar{height:calc(3px + 9px * var(--l,.5))}
-    .vol{width:160px;max-width:50vw}
-
-    /* Reduced motion */
-    @media (prefers-reduced-motion:reduce){
-      .task-button#tb-player::before{transition:none}
-      .bar{transition:none}
-    }
-  </style>
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
@@ -244,13 +155,23 @@
       <div class="task-controls">
         <select class="theme-select" id="themeSelect" aria-label="Tema">
           <option value="win98">Windows 98/ME</option>
-          <option value="modern">Moderno</option>
+          <option value="modern" selected>Moderno</option>
         </select>
         <div class="task-clock" id="taskClock" aria-live="polite" aria-label="Relógio"></div>
+      </div>
+      <button class="task-button mobile-only" id="tb-menu" aria-haspopup="true" aria-expanded="false" title="Menu">≡</button>
+      <div id="mobileMenu" class="mobile-menu" role="menu" aria-hidden="true">
+        <button class="menu-item" data-open="#win-player">Player</button>
+        <button class="menu-item" data-open="#win-portfolio">Portfolio</button>
+        <button class="menu-item" data-open="#win-etic">ETIC</button>
+        <button class="menu-item" data-open="#win-pro">Professional</button>
+        <button class="menu-item" data-open="#win-about">About</button>
+        <button class="menu-item" data-open="#win-contact">Contact</button>
       </div>
     </div>
   </div>
 
+  <script src="waves.js"></script>
   <script src="app.js"></script>
 </body>
 </html>
