@@ -1,0 +1,131 @@
+/* Base + Win98/ME theme (default) */
+
+:root{
+  --bg:#008080;
+  --ink:#000000;
+  --muted:#2b2b2b;
+  --maxw:1200px;
+  --bar-brass:#c08a3e; /* dynamic tint base */
+
+  /* Win98 palette */
+  --win-face:#c0c0c0;
+  --win-text:#000000;
+  --win-inactive-text:#222222;
+  --win-highlight:#ffffff;
+  --win-shadow:#808080;
+  --win-dark:#000000;
+  --title-inactive:#808080;
+  --title-active:#000080;
+}
+
+*{box-sizing:border-box}
+html,body{margin:0;padding:0;background:var(--bg);color:var(--ink);font:14px/1.4 Tahoma,"Microsoft Sans Serif",system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial}
+a{color:var(--ink);text-decoration:none}
+a:hover{opacity:.9}
+.container{width:100%;max-width:var(--maxw);margin:0 auto;padding:0 20px}
+
+/* Desktop */
+.desktop{position:relative;min-height:100vh;overflow:hidden}
+.wallpaper{display:none}
+.scrim{display:none}
+
+/* Taskbar (Win98 default) */
+.taskbar{position:fixed;left:0;right:0;bottom:0;height:32px;background:var(--win-face);border-top:1px solid var(--win-dark);box-shadow:inset 0 1px 0 var(--win-highlight), inset 0 -1px 0 var(--win-shadow);display:flex;align-items:center;gap:6px;padding:4px 6px}
+.taskbar .spacer{flex:1}
+.task-button{position:relative;padding:4px 10px;min-width:84px;height:24px;color:var(--win-text);cursor:pointer;background:var(--win-face);border:1px solid var(--win-dark);box-shadow:inset -1px -1px 0 var(--win-shadow), inset 1px 1px 0 var(--win-highlight);transition:none;border-radius:0}
+.task-button:hover{filter:brightness(1.02)}
+.task-button.pulsing-static{box-shadow:inset 1px 1px 0 var(--win-shadow), inset -1px -1px 0 var(--win-highlight)}
+.task-button{ --pulse:0; --hue:40; }
+.task-button.pulsing::before{content:""; position:absolute; left:0; right:0; bottom:-2px; height:2px; background:hsl(var(--hue,40) 80% 45% / .9); transform-origin:left center; transform:scaleX(var(--pulse,0));}
+
+/* Taskbar right area: theme select + clock */
+.task-controls{display:flex;align-items:center;gap:8px}
+.theme-select{height:22px;border:1px solid var(--win-dark);background:var(--win-face);box-shadow:inset -1px -1px 0 var(--win-shadow), inset 1px 1px 0 var(--win-highlight);font:12px Tahoma,"Microsoft Sans Serif";color:var(--win-text)}
+.task-clock{min-width:92px;text-align:center;border:1px solid var(--win-dark);background:var(--win-face);box-shadow:inset -1px -1px 0 var(--win-shadow), inset 1px 1px 0 var(--win-highlight);padding:2px 6px;height:24px;display:grid;place-items:center;font-variant-numeric:tabular-nums}
+
+/* Windows (Win98 default) */
+.win{ --tint: var(--bar-brass); position:absolute;top:14vh;left:8vw;width:min(720px,90vw);max-width:90vw;max-height:72vh;display:flex;flex-direction:column;background:var(--win-face);border:1px solid var(--win-dark);box-shadow:inset -1px -1px 0 var(--win-shadow), inset 1px 1px 0 var(--win-highlight);border-radius:0 }
+.win.hidden{display:none; --tint: transparent !important}
+.titlebar{cursor:move;user-select:none;display:flex;align-items:center;justify-content:space-between;gap:8px;padding:4px 6px;height:24px;color:#fff;background: linear-gradient(180deg, var(--title-inactive), color-mix(in srgb, var(--title-inactive) 70%, #000 30%));box-shadow: inset -1px -1px 0 rgba(0,0,0,.35), inset 1px 1px 0 rgba(255,255,255,.25)}
+.win.active .titlebar{background: linear-gradient(180deg, color-mix(in srgb, var(--tint) 70%, var(--title-active) 30%), color-mix(in srgb, var(--tint) 40%, var(--title-active) 60%))}
+.titlebar .left{display:flex;align-items:center;gap:8px}
+.title{letter-spacing:.2px;opacity:.95}
+.window-controls{display:flex;gap:6px}
+.ctl{width:20px;height:18px;border-radius:0;background:var(--win-face);color:#000;display:grid;place-items:center;cursor:pointer;border:1px solid var(--win-dark);box-shadow: inset -1px -1px 0 var(--win-shadow), inset 1px 1px 0 var(--win-highlight)}
+.ctl:hover{filter:brightness(1.05)}
+
+.content{padding:8px 10px;overflow:auto}
+.content p{color:var(--win-text)}
+.muted{color:var(--win-inactive-text)}
+
+/* Lists */
+.list{display:grid;gap:12px}
+.item{padding:12px 0;border-bottom:1px solid rgba(0,0,0,.15)}
+.item:last-child{border-bottom:none}
+
+/* Z stacking */
+.win{z-index:10}
+.win.active{z-index:100}
+
+/* Preloader */
+#preloader{position:fixed;inset:0;background:#0a0a0a;display:flex;align-items:center;justify-content:center;z-index:9999;transition:opacity .35s ease}
+.spinner{width:64px;height:64px;border-radius:50%;border:3px solid rgba(255,255,255,.12);border-top-color:#fff;animation:spin 1s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* Player */
+.player{display:grid;grid-template-columns:1fr auto;align-items:center;gap:12px;min-width:0}
+.player .row{display:flex;align-items:center;gap:8px;min-width:0;flex-wrap:wrap}
+.btn-rect{padding:4px 8px;border-radius:0;color:var(--win-text);cursor:pointer;background:var(--win-face);border:1px solid var(--win-dark);box-shadow: inset -1px -1px 0 var(--win-shadow), inset 1px 1px 0 var(--win-highlight)}
+.btn-rect:hover{filter:brightness(1.05)}
+.track{font-variant-numeric:tabular-nums;letter-spacing:.3px;opacity:.9;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:48ch}
+.vu{display:flex;gap:2px;align-items:end;height:12px}
+.bar{width:3px;height:4px;background:#9cff7a;opacity:.85;transition:height .08s linear}
+.player.playing .bar{height:calc(3px + 9px * var(--l,.5))}
+.vol{width:160px;max-width:50vw}
+
+/* Reduced motion */
+@media (prefers-reduced-motion:reduce){
+  .task-button#tb-player::before{transition:none}
+  .bar{transition:none}
+}
+
+/* Modern theme overrides */
+body.theme-modern{
+  --bg:#0a0a0a;
+  --ink:#ffffff;
+  --muted:#e7e7e7;
+}
+body.theme-modern .wallpaper{position:fixed;inset:0;z-index:-2;background:url('000002222.jpg') center/cover no-repeat fixed;filter:brightness(.5) saturate(1.05) sepia(.18);display:block}
+body.theme-modern .scrim{position:fixed;inset:0;z-index:-1;display:block;background:
+  radial-gradient(70% 60% at 60% 35%, rgba(192,138,62,.10), transparent 62%),
+  radial-gradient(60% 50% at 20% 70%, rgba(125,179,155,.08), transparent 60%),
+  linear-gradient(to bottom, rgba(10,10,10,.08), rgba(10,10,10,.88));
+}
+
+body.theme-modern .taskbar{left:12px;right:12px;bottom:12px;height:48px;border:1px solid rgba(255,255,255,.12);border-radius:12px;backdrop-filter:blur(10px);background:rgba(12,12,12,.55);box-shadow:none;padding:8px 10px;gap:10px}
+body.theme-modern .task-button{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:8px 12px;border-radius:10px;border:1px solid rgba(255,255,255,.16);background:rgba(20,20,20,.45);color:var(--ink);box-shadow:none;line-height:1;text-align:center}
+body.theme-modern .task-button:hover{transform:translateY(-1px)}
+body.theme-modern .task-button.pulsing::after{content:"";position:absolute;inset:-2px;border-radius:12px;border:1px solid rgba(255,255,255,.25);box-shadow:0 0 0 2px rgba(255,255,255,.06) inset}
+body.theme-modern .task-button{ --pulse:0; --hue:40; }
+/* In modern theme, player pulses entire button area */
+body.theme-modern #tb-player.pulsing::before{content:""; position:absolute; left:0; top:0; bottom:0; width:calc(var(--pulse,0) * 100%); border-radius:10px;background: linear-gradient(90deg, hsl(var(--hue) 90% 60% / .18), hsl(calc(var(--hue) + 60) 90% 60% / .35));transition: width .08s linear, background .2s ease; pointer-events:none}
+body.theme-modern .task-button.pulsing-static::before{ width:100%; background-size:200% 100%; animation: barSweep 2.6s ease-in-out infinite }
+/* Theme controls (modern) */
+body.theme-modern .task-controls{gap:10px}
+body.theme-modern .theme-select{height:32px; padding:0 10px; border-radius:10px; border:1px solid rgba(255,255,255,.16); background:rgba(20,20,20,.45); color:var(--ink); box-shadow:none; font:14px/1.2 system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial}
+body.theme-modern .task-clock{min-width:110px;height:32px;border:1px solid rgba(255,255,255,.16);border-radius:10px;background:rgba(20,20,20,.45);color:var(--ink);box-shadow:none}
+
+body.theme-modern .win{border:1px solid rgba(255,255,255,.18);border-radius:12px;background:rgba(18,18,18,.66);backdrop-filter:blur(14px) saturate(110%);box-shadow:0 30px 80px rgba(0,0,0,.45),inset 0 0 0 1px color-mix(in oklab, var(--tint), transparent 82%)}
+body.theme-modern .titlebar{gap:10px;padding:10px 12px;height:auto;border-bottom:1px solid color-mix(in oklab, var(--tint), transparent 55%);background:linear-gradient(180deg, color-mix(in oklab, var(--tint), transparent 78%), rgba(255,255,255,.03));border-top-left-radius:12px;border-top-right-radius:12px;transition:border-color .25s ease, background .25s ease}
+body.theme-modern .win.active .titlebar{border-bottom-color: color-mix(in oklab, var(--tint), white 12%);background:linear-gradient(180deg, color-mix(in oklab, var(--tint), transparent 65%), rgba(255,255,255,.06))}
+body.theme-modern .ctl{width:26px;height:22px;border-radius:8px;border:1px solid color-mix(in oklab, var(--tint), transparent 45%);background:rgba(30,30,30,.55);color:#fff;box-shadow:inset 0 0 0 1px color-mix(in oklab, var(--tint), transparent 82%);display:flex;align-items:center;justify-content:center;line-height:1}
+body.theme-modern .ctl:hover{background:rgba(35,35,35,.68)}
+body.theme-modern .content{padding:16px}
+body.theme-modern .content p{color:#fff}
+body.theme-modern .muted{color:var(--muted)}
+body.theme-modern .win::after{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;background:linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.02));mix-blend-mode:screen;opacity:.8}
+body.theme-modern .win::before{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;background:url('https://source.unsplash.com/random/1200x800/?synthwave,neon,80s') center/cover no-repeat;mix-blend-mode:difference;opacity:.55}
+body.theme-modern .btn-rect{padding:8px 10px;border-radius:6px;border:1px solid color-mix(in oklab, var(--tint), transparent 45%);background:rgba(25,25,25,.65);color:#fff;box-shadow:inset 0 0 0 1px color-mix(in oklab, var(--tint), transparent 82%);display:flex;align-items:center;justify-content:center}
+body.theme-modern .btn-rect:hover{background:rgba(35,35,35,.72)}
+
+
