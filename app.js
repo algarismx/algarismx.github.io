@@ -1,8 +1,10 @@
-// Generated from app.ts (manual inline) to avoid build step
+// Elements
 const wins = Array.from(document.querySelectorAll('.win'));
 function randHue() { return Math.floor(Math.random() * 360); }
 function buttonForWindow(win) { return document.querySelector(`[data-open="#${win.id}"]`); }
+// Hues per window
 const windowHues = new Map();
+// Seed hues and task buttons, init tint transparent
 wins.forEach((w) => {
     const h = randHue();
     windowHues.set(w.id, h);
@@ -11,12 +13,23 @@ wins.forEach((w) => {
     if (tb)
         tb.style.setProperty('--hue', String(h));
 });
+// Preloader
 window.addEventListener('load', () => {
     setTimeout(() => { const p = document.getElementById('preloader'); if (p) {
         p.style.opacity = '0';
         setTimeout(() => p.remove(), 350);
     } }, 450);
+    // Aguardar que waves.js carregue
+    setTimeout(() => {
+        if (window.WavesController) {
+            console.log('Waves loaded successfully on page load');
+        }
+        else {
+            console.warn('Waves not loaded on page load');
+        }
+    }, 500);
 });
+// Window Manager
 let zTop = 100;
 function bringToFront(win) {
     document.querySelectorAll('.win').forEach(w => w.classList.remove('active'));
@@ -25,8 +38,6 @@ function bringToFront(win) {
 }
 wins.forEach((win) => {
     win.addEventListener('mousedown', () => bringToFront(win));
-    // Touch bring-to-front (mobile)
-    win.addEventListener('touchstart', () => bringToFront(win), { passive: true });
     const tb = win.querySelector('[data-drag]');
     if (tb) {
         let sx = 0, sy = 0, ox = 0, oy = 0, dragging = false;
@@ -52,30 +63,6 @@ wins.forEach((win) => {
             win.style.top = ny + 'px';
         });
         window.addEventListener('mouseup', () => dragging = false);
-        // Touch dragging
-        tb.addEventListener('touchstart', (e) => {
-            const t = e.touches[0];
-            dragging = true;
-            bringToFront(win);
-            sx = t.clientX;
-            sy = t.clientY;
-            const r = win.getBoundingClientRect();
-            ox = r.left;
-            oy = r.top;
-        }, { passive: true });
-        window.addEventListener('touchmove', (e) => {
-            if (!dragging)
-                return;
-            const t = e.touches[0];
-            const dx = t.clientX - sx, dy = t.clientY - sy;
-            const vw = innerWidth, vh = innerHeight, ww = win.offsetWidth, wh = win.offsetHeight;
-            let nx = ox + dx, ny = oy + dy;
-            nx = Math.max(6, Math.min(vw - ww - 6, nx));
-            ny = Math.max(6, Math.min(vh - wh - 80, ny));
-            win.style.left = nx + 'px';
-            win.style.top = ny + 'px';
-        }, { passive: true });
-        window.addEventListener('touchend', () => dragging = false, { passive: true });
     }
     win.querySelectorAll('[data-close]').forEach(btn => {
         btn.addEventListener('click', () => {
@@ -86,18 +73,8 @@ wins.forEach((win) => {
                 targetWin.style.setProperty('--tint', 'transparent');
             }
             const tb = document.querySelector(`[data-open="#${win.id}"]`);
-            if (tb) {
-                if (win.id === 'win-player') {
-                    if (audio.paused)
-                        tb.classList.remove('pulsing-static');
-                }
-                else {
-                    if (win.classList.contains('hidden'))
-                        tb.classList.remove('pulsing-static');
-                    else
-                        tb.classList.add('pulsing-static');
-                }
-            }
+            if (tb)
+                tb.classList.remove('pulsing-static');
         });
     });
     win.querySelectorAll('[data-minimize]').forEach(btn => {
@@ -107,9 +84,8 @@ wins.forEach((win) => {
             if (isHidden) {
                 setTimeout(() => {
                     const hue = windowHues.get(win.id);
-                    if (hue !== undefined) {
+                    if (hue !== undefined)
                         win.style.setProperty('--tint', `oklch(0.72 0.12 ${hue})`);
-                    }
                 }, 10);
             }
             else {
@@ -117,57 +93,33 @@ wins.forEach((win) => {
             }
             const tb = document.querySelector(`[data-open="#${win.id}"]`);
             if (tb) {
-                if (win.id === 'win-player') {
-                    if (audio.paused)
-                        tb.classList.remove('pulsing-static');
-                }
-                else {
-                    if (win.classList.contains('hidden'))
-                        tb.classList.remove('pulsing-static');
-                    else
-                        tb.classList.add('pulsing-static');
-                }
+                if (win.classList.contains('hidden'))
+                    tb.classList.remove('pulsing-static');
+                else
+                    tb.classList.add('pulsing-static');
             }
         });
     });
 });
 document.querySelectorAll('[data-open]').forEach(btn => {
     btn.addEventListener('click', (e) => {
-        const sel = btn.getAttribute('data-open');
+        const sel = e.currentTarget.getAttribute('data-open');
         const w = document.querySelector(sel);
-        if (!w)
-            return;
-        const isHidden = w.classList.contains('hidden');
-        const isActive = w.classList.contains('active');
-        if (isHidden) {
-            // Restore minimized window
+        if (w) {
             w.classList.remove('hidden');
             bringToFront(w);
             setTimeout(() => {
                 const hue = windowHues.get(w.id);
-                if (hue !== undefined) {
+                if (hue !== undefined)
                     w.style.setProperty('--tint', `oklch(0.72 0.12 ${hue})`);
-                }
             }, 10);
         }
-        else if (isActive) {
-            // Active -> minimize (toggle)
-            w.classList.add('hidden');
-            w.style.setProperty('--tint', 'transparent');
-        }
-        else {
-            // Inactive but visible -> activate
-            bringToFront(w);
-        }
         const tb = e.currentTarget;
-        if (sel !== '#win-player') {
-            if (w.classList.contains('hidden'))
-                tb.classList.remove('pulsing-static');
-            else
-                tb.classList.add('pulsing-static');
-        }
+        if (sel !== '#win-player')
+            tb.classList.add('pulsing-static');
     });
 });
+// Player
 const audio = new Audio('https://radio.plaza.one/mp3');
 audio.crossOrigin = 'anonymous';
 audio.preload = 'none';
@@ -177,6 +129,7 @@ const btnPlay = document.getElementById('btnPlay');
 const btnPause = document.getElementById('btnPause');
 const btnStop = document.getElementById('btnStop');
 const vol = document.getElementById('vol');
+const sens = document.getElementById('sens');
 const bars = ['b1', 'b2', 'b3', 'b4', 'b5'].map(id => document.getElementById(id));
 const tbPlayer = document.getElementById('tb-player');
 const winPlayer = document.getElementById('win-player');
@@ -185,13 +138,19 @@ let ctx = null, src = null, analyser = null, data = null;
 function ensureAudioGraph() {
     if (ctx)
         return;
-    ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const AC = window.AudioContext || window.webkitAudioContext;
+    ctx = new AC();
     src = ctx.createMediaElementSource(audio);
     analyser = ctx.createAnalyser();
     analyser.fftSize = 256;
     data = new Uint8Array(analyser.frequencyBinCount);
     src.connect(analyser);
     analyser.connect(ctx.destination);
+    // Expose analyser globally for Waves
+    window.appAnalyser = analyser;
+    if (window.WavesController && window.WavesController.attachAnalyser) {
+      window.WavesController.attachAnalyser(analyser);
+    }
 }
 function setPlaying(p) { player.classList.toggle('playing', p); }
 btnPlay.addEventListener('click', async () => {
@@ -202,25 +161,43 @@ btnPlay.addEventListener('click', async () => {
         await audio.play();
         setPlaying(true);
     }
-    catch (e) { console.warn(e); }
+    catch (e) {
+        console.warn(e);
+    }
 });
 btnPause.addEventListener('click', () => { audio.pause(); setPlaying(false); });
-btnStop.addEventListener('click', () => { audio.pause(); audio.currentTime = 0; setPlaying(false); });
+btnStop.addEventListener('click', () => {
+    audio.pause();
+    audio.currentTime = 0;
+    setPlaying(false);
+});
 vol.addEventListener('input', () => { audio.volume = +vol.value; });
 audio.volume = +vol.value;
+if (sens){
+  sens.addEventListener('input', ()=>{
+    const v = parseFloat(sens.value);
+    if (window.WavesController && window.WavesController.setSensitivity){
+      window.WavesController.setSensitivity(v);
+    } else {
+      window._pendingSensitivity = v;
+    }
+  });
+  const pv = window._pendingSensitivity; if (pv && (window.WavesController && window.WavesController.setSensitivity)){ window.WavesController.setSensitivity(pv); }
+}
 function avg(a, b) { let s = 0, c = 0; for (let i = a; i < b && i < data.length; i++) {
     s += data[i];
     c++;
 } return c ? s / c : 0; }
 function loop() {
     requestAnimationFrame(loop);
-    if (!analyser)
+    if (!analyser || !data)
         return;
     if (!audio.paused) {
         analyser.getByteFrequencyData(data);
         const bands = [avg(0, 6), avg(6, 12), avg(12, 22), avg(22, 36), avg(36, 64)];
         bands.forEach((v, i) => { const n = Math.min(1, v / 255); bars[i].style.setProperty('--l', (0.15 + 0.85 * n).toFixed(2)); });
-        let num = 0, den = 0; for (let i = 0; i < data.length; i++) {
+        let num = 0, den = 0;
+        for (let i = 0; i < data.length; i++) {
             num += i * data[i];
             den += data[i];
         }
@@ -247,81 +224,43 @@ function loop() {
     }
 }
 loop();
+// Theme toggle + Clock
 const themeSelect = document.getElementById('themeSelect');
-function applyTheme(){
-    if (themeSelect && !themeSelect.dataset.init){ themeSelect.value = 'modern'; themeSelect.dataset.init = '1'; }
-    const isModern = themeSelect && themeSelect.value === 'modern';
-    document.body.classList.toggle('theme-modern', !!isModern);
-    
-    // Debug: verificar se WavesController está disponível
-    console.log('WavesController available:', !!window.WavesController);
-    console.log('Theme:', isModern ? 'modern' : 'win98');
-    
-    // Waves only on modern theme
-    if (window.WavesController){
-        if (isModern) {
-            console.log('Mounting Waves...');
-            try {
-                window.WavesController.mount();
-                console.log('Waves mounted successfully');
-            } catch (e) {
-                console.error('Error mounting Waves:', e);
-            }
-        } else {
-            console.log('Unmounting Waves...');
-            try {
-                window.WavesController.unmount();
-                console.log('Waves unmounted successfully');
-            } catch (e) {
-                console.error('Error unmounting Waves:', e);
-            }
-        }
-    } else {
-        console.warn('WavesController not found! Check if waves.js is loaded');
-        console.log('Available window objects:', Object.keys(window).filter(k => k.toLowerCase().includes('wave')));
-    }
-}
 if (themeSelect) {
-    themeSelect.addEventListener('change', applyTheme);
-    // Forçar tema moderno por padrão no carregamento
-    themeSelect.value = 'modern';
-    themeSelect.dataset.init = '1';
-    // Aguardar mais tempo para garantir que waves.js carregou
-    setTimeout(() => {
-        console.log('Applying theme after delay...');
-        applyTheme();
-        
-        // Teste direto das Waves após 1 segundo
-        setTimeout(() => {
-            console.log('Testing Waves directly...');
-            if (window.WavesController) {
-                console.log('WavesController found, testing mount...');
+    // Inicializar com tema Windows ME
+    themeSelect.value = 'win98';
+    document.body.classList.remove('theme-modern');
+    themeSelect.addEventListener('change', () => {
+        const isModern = themeSelect.value === 'modern';
+        document.body.classList.toggle('theme-modern', isModern);
+        // Waves only on modern theme
+        if (window.WavesController) {
+            if (isModern) {
+                console.log('Mounting Waves...');
                 try {
                     window.WavesController.mount();
-                    console.log('Waves mounted successfully in test');
-                } catch (e) {
-                    console.error('Error in test mount:', e);
+                    console.log('Waves mounted successfully');
+                    // Attach analyser again if present
+                    if (window.WavesController && window.WavesController.attachAnalyser && analyser) {
+                      window.WavesController.attachAnalyser(analyser);
+                    }
+                    const pv = window._pendingSensitivity; if (pv && (window.WavesController && window.WavesController.setSensitivity)){ window.WavesController.setSensitivity(pv); }
                 }
-            } else {
-                console.error('WavesController still not found after delay');
+                catch (e) {
+                    console.error('Error mounting Waves:', e);
+                }
             }
-        }, 1000);
-    }, 500);
-}
-// Mobile menu toggle
-const tbMenu = document.getElementById('tb-menu');
-const mobileMenu = document.getElementById('mobileMenu');
-if (tbMenu && mobileMenu){
-    tbMenu.addEventListener('click', ()=>{
-        const open = mobileMenu.getAttribute('aria-hidden') !== 'false';
-        mobileMenu.setAttribute('aria-hidden', open ? 'false' : 'true');
-        tbMenu.setAttribute('aria-expanded', (!open).toString());
-    });
-    mobileMenu.querySelectorAll('[data-open]').forEach(b=>{
-        b.addEventListener('click', ()=>{
-            mobileMenu.setAttribute('aria-hidden','true');
-            tbMenu.setAttribute('aria-expanded','false');
-        });
+            else {
+                console.log('Unmounting Waves...');
+                try {
+                    window.WavesController.unmount();
+                    console.log('Waves unmounted successfully');
+                }
+                catch (e) {
+                    console.error('Error unmounting Waves:', e);
+                }
+            }
+        }
     });
 }
 const clockEl = document.getElementById('taskClock');
@@ -335,5 +274,43 @@ function updateClock() {
 }
 updateClock();
 setInterval(updateClock, 1000 * 30);
+// Hamburger menu behavior (works on both themes)
+const tbMenu = document.getElementById('tb-menu');
+const mobileMenu = document.getElementById('mobileMenu');
+function setMenu(open){
+  if (!tbMenu || !mobileMenu) return;
+  tbMenu.setAttribute('aria-expanded', String(open));
+  mobileMenu.setAttribute('aria-hidden', String(!open));
+  mobileMenu.classList.toggle('open', open);
+}
+if (tbMenu && mobileMenu){
+  tbMenu.addEventListener('click', (e)=>{
+    e.stopPropagation();
+    const isOpen = tbMenu.getAttribute('aria-expanded') === 'true';
+    setMenu(!isOpen);
+  });
+  mobileMenu.addEventListener('click', (e)=>{
+    const t = e.target;
+    if (t && (t.classList.contains('menu-item') || t.hasAttribute('data-open'))){
+      setTimeout(()=> setMenu(false), 0);
+    }
+  });
+  document.addEventListener('click', (e)=>{
+    const isOpen = tbMenu.getAttribute('aria-expanded') === 'true';
+    if (!isOpen) return;
+    if (!mobileMenu.contains(e.target) && e.target !== tbMenu){ setMenu(false); }
+  });
+  document.addEventListener('keydown', (e)=>{ if (e.key === 'Escape') setMenu(false); });
+}
 
-
+// Keyboard shortcuts
+window.addEventListener('keydown', (e)=>{
+  if (e.code === 'Space'){
+    e.preventDefault();
+    if (audio.paused) btnPlay.click(); else btnPause.click();
+  }
+  if (e.key === 'm' || e.key === 'M'){
+    const tb = document.getElementById('tb-menu');
+    if (tb) tb.click();
+  }
+});

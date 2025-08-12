@@ -41,6 +41,10 @@
             <span class="track" id="trackTitle">https://radio.plaza.one/mp3</span>
             <input class="vol" id="vol" type="range" min="0" max="1" step="0.01" value="0.6" aria-label="Volume" />
           </div>
+          <div class="row">
+            <label class="sens-label" for="sens">Sensitivity</label>
+            <input class="sens" id="sens" type="range" min="0.5" max="3" step="0.1" value="1.2" aria-label="Waves sensitivity" />
+          </div>
         </div>
       </div>
     </div>
@@ -104,6 +108,7 @@
       </div>
     </div>
 
+
     <!-- About window -->
     <div class="win hidden" id="win-about" style="top:12vh;left:52vw;width:min(760px,92vw);">
       <div class="titlebar" data-drag>
@@ -151,27 +156,50 @@
       <button class="task-button" data-open="#win-pro">Professional</button>
       <button class="task-button" data-open="#win-about">About</button>
       <button class="task-button" data-open="#win-contact">Contact</button>
+      
+      <!-- Hamburger (collapses tabs on small widths) -->
+      <button class="task-button mobile-only" id="tb-menu" aria-haspopup="true" aria-expanded="false" aria-controls="mobileMenu" title="Menu">≡</button>
+
       <div class="spacer"></div>
       <div class="task-controls">
         <select class="theme-select" id="themeSelect" aria-label="Tema">
-          <option value="win98">Windows 98/ME</option>
-          <option value="modern" selected>Moderno</option>
+          <option value="win98" selected>Windows 98/ME</option>
+          <option value="modern">Moderno</option>
         </select>
         <div class="task-clock" id="taskClock" aria-live="polite" aria-label="Relógio"></div>
       </div>
-      <button class="task-button mobile-only" id="tb-menu" aria-haspopup="true" aria-expanded="false" title="Menu">≡</button>
+      
+      <!-- Collapsed items (Start-like menu) -->
       <div id="mobileMenu" class="mobile-menu" role="menu" aria-hidden="true">
-        <button class="menu-item" data-open="#win-player">Player</button>
-        <button class="menu-item" data-open="#win-portfolio">Portfolio</button>
-        <button class="menu-item" data-open="#win-etic">ETIC</button>
-        <button class="menu-item" data-open="#win-pro">Professional</button>
-        <button class="menu-item" data-open="#win-about">About</button>
-        <button class="menu-item" data-open="#win-contact">Contact</button>
+        <button class="menu-item" data-open="#win-player" role="menuitem">Player</button>
+        <button class="menu-item" data-open="#win-portfolio" role="menuitem">Portfolio</button>
+        <button class="menu-item" data-open="#win-etic" role="menuitem">ETIC</button>
+        <button class="menu-item" data-open="#win-pro" role="menuitem">Professional</button>
+        <button class="menu-item" data-open="#win-about" role="menuitem">About</button>
+        <button class="menu-item" data-open="#win-contact" role="menuitem">Contact</button>
       </div>
     </div>
   </div>
 
+  <div id="kbdHints" class="kbd-hints" aria-hidden="true">Space — Play/Pause · M — Menu · Esc — Close</div>
+
   <script src="waves.js"></script>
+  <script>
+    // Aguardar que waves.js carregue completamente
+    window.addEventListener('load', () => {
+      setTimeout(() => {
+        if (window.WavesController) {
+          console.log('Waves loaded successfully');
+          // Attach analyser if already present
+          if (window.WavesController.attachAnalyser && window.appAnalyser) {
+            window.WavesController.attachAnalyser(window.appAnalyser);
+          }
+        } else {
+          console.error('Waves failed to load');
+        }
+      }, 100);
+    });
+  </script>
   <script src="app.js"></script>
 </body>
 </html>

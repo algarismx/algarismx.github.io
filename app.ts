@@ -1,6 +1,10 @@
 // Basic TS types
 type Nullable<T> = T | null;
 type WebAudioWindow = Window & typeof globalThis & { webkitAudioContext?: typeof AudioContext };
+type WavesWindow = Window & typeof globalThis & { WavesController?: any };
+
+// Avoid TS errors for global analyzer
+declare var AudioMotionAnalyzer: any;
 
 // Elements
 const wins: HTMLElement[] = Array.from(document.querySelectorAll('.win')) as HTMLElement[];
@@ -22,6 +26,15 @@ wins.forEach((w)=>{
 // Preloader
 window.addEventListener('load', () => {
   setTimeout(()=>{ const p=document.getElementById('preloader'); if(p){ p.style.opacity='0'; setTimeout(()=>p.remove(), 350);} }, 450);
+  
+  // Aguardar que waves.js carregue
+  setTimeout(() => {
+    if ((window as WavesWindow).WavesController) {
+      console.log('Waves loaded successfully on page load');
+    } else {
+      console.warn('Waves not loaded on page load');
+    }
+  }, 500);
 });
 
 // Window Manager
@@ -104,22 +117,32 @@ const btnPlay = document.getElementById('btnPlay')!;
 const btnPause = document.getElementById('btnPause')!;
 const btnStop = document.getElementById('btnStop')!;
 const vol = document.getElementById('vol') as HTMLInputElement;
+const sens = document.getElementById('sens') as Nullable<HTMLInputElement>;
 const bars = ['b1','b2','b3','b4','b5'].map(id=>document.getElementById(id)!) as HTMLElement[];
 const tbPlayer = document.getElementById('tb-player')! as HTMLElement;
 const winPlayer = document.getElementById('win-player')! as HTMLElement;
 winPlayer.style.setProperty('--tint', 'transparent');
 
+
 let ctx: AudioContext | null = null, src: MediaElementAudioSourceNode | null = null, analyser: AnalyserNode | null = null, data: Uint8Array | null = null;
 function ensureAudioGraph(){
   if(ctx) return;
   const AC = (window as WebAudioWindow).AudioContext || (window as WebAudioWindow).webkitAudioContext!;
-  ctx = new AC();
+  ctx = new AC(); 
   src = (ctx as AudioContext).createMediaElementSource(audio);
   analyser = (ctx as AudioContext).createAnalyser();
   (analyser as AnalyserNode).fftSize = 256;
   data = new Uint8Array((analyser as AnalyserNode).frequencyBinCount);
   (src as MediaElementAudioSourceNode).connect(analyser as AnalyserNode); (analyser as AnalyserNode).connect((ctx as AudioContext).destination);
+  // Expose analyser globally for Waves
+  ;(window as any).appAnalyser = analyser;
+  // Attach to WavesController if present
+  if ((window as any).WavesController && (window as any).WavesController.attachAnalyser) {
+    (window as any).WavesController.attachAnalyser(analyser);
+  }
 }
+
+
 function setPlaying(p:boolean){ player.classList.toggle('playing', p); }
 
 btnPlay.addEventListener('click', async ()=>{
@@ -131,17 +154,33 @@ btnPlay.addEventListener('click', async ()=>{
   }catch(e){ console.warn(e); }
 });
 btnPause.addEventListener('click', ()=>{ audio.pause(); setPlaying(false); });
-btnStop.addEventListener('click', ()=>{ audio.pause(); audio.currentTime=0; setPlaying(false); });
+btnStop.addEventListener('click', ()=>{ 
+  audio.pause(); 
+  audio.currentTime=0; 
+  setPlaying(false); 
+});
 
 vol.addEventListener('input', ()=>{ audio.volume=+vol.value; });
 audio.volume=+vol.value;
+if (sens){
+  sens.addEventListener('input', ()=>{
+    const v = parseFloat(sens!.value);
+    if ((window as WavesWindow).WavesController && (window as WavesWindow).WavesController.setSensitivity){
+      (window as WavesWindow).WavesController.setSensitivity(v);
+    } else {
+      (window as any)._pendingSensitivity = v;
+    }
+  });
+  // apply pending at load
+  const pv = (window as any)._pendingSensitivity; if (pv && (window as WavesWindow).WavesController?.setSensitivity){ (window as WavesWindow).WavesController.setSensitivity(pv); }
+}
 
 function avg(a:number,b:number){ let s=0,c=0; for(let i=a;i<b&&i<(data as Uint8Array).length;i++){ s+=(data as Uint8Array)[i]; c++; } return c? s/c:0; }
 function loop(){
   requestAnimationFrame(loop);
   if(!analyser || !data) return;
   if(!audio.paused){
-    (analyser as AnalyserNode).getByteFrequencyData(data as Uint8Array);
+    (analyser as AnalyserNode).getByteFrequencyData(data as Uint8Array<ArrayBuffer>);
     const bands=[avg(0,6), avg(6,12), avg(12,22), avg(22,36), avg(36,64)];
     bands.forEach((v,i)=>{ const n=Math.min(1,v/255); (bars[i] as HTMLElement).style.setProperty('--l',(0.15+0.85*n).toFixed(2)); });
     let num=0, den=0; for(let i=0;i<(data as Uint8Array).length;i++){ num += i*(data as Uint8Array)[i]; den += (data as Uint8Array)[i]; }
@@ -166,11 +205,44 @@ function loop(){
 }
 loop();
 
+
 // Theme toggle + Clock
 const themeSelect = document.getElementById('themeSelect') as Nullable<HTMLSelectElement>;
 if (themeSelect){
+  // Inicializar com tema Windows ME
+  themeSelect.value = 'win98';
+  document.body.classList.remove('theme-modern');
+  
   themeSelect.addEventListener('change', ()=>{
-    document.body.classList.toggle('theme-modern', themeSelect.value === 'modern');
+    const isModern = themeSelect.value === 'modern';
+    document.body.classList.toggle('theme-modern', isModern);
+    
+    // Waves only on modern theme
+    if ((window as WavesWindow).WavesController){
+      if (isModern) {
+        console.log('Mounting Waves...');
+        try {
+          (window as WavesWindow).WavesController!.mount();
+          console.log('Waves mounted successfully');
+          // Attach analyser again if present
+          if ((window as any).WavesController && (window as any).WavesController.attachAnalyser && analyser) {
+            (window as any).WavesController.attachAnalyser(analyser);
+          }
+          // Apply pending sensitivity if present
+          const pv = (window as any)._pendingSensitivity; if (pv && (window as WavesWindow).WavesController?.setSensitivity){ (window as WavesWindow).WavesController.setSensitivity(pv); }
+        } catch (e) {
+          console.error('Error mounting Waves:', e);
+        }
+      } else {
+        console.log('Unmounting Waves...');
+        try {
+          (window as WavesWindow).WavesController!.unmount();
+          console.log('Waves unmounted successfully');
+        } catch (e) {
+          console.error('Error unmounting Waves:', e);
+        }
+      }
+    }
   });
 }
 
@@ -184,5 +256,57 @@ function updateClock(){
 }
 updateClock();
 setInterval(updateClock, 1000 * 30);
+// Keyboard shortcuts
+window.addEventListener('keydown', (e)=>{
+  // Space: play/pause
+  if (e.code === 'Space'){
+    e.preventDefault();
+    if (audio.paused) btnPlay.click(); else btnPause.click();
+  }
+  // M: toggle menu
+  if (e.key === 'm' || e.key === 'M'){
+    const tb = document.getElementById('tb-menu');
+    if (tb) (tb as HTMLElement).click();
+  }
+});
+
+// Hamburger menu behavior (works on both themes)
+const tbMenu = document.getElementById('tb-menu') as Nullable<HTMLButtonElement>;
+const mobileMenu = document.getElementById('mobileMenu') as Nullable<HTMLElement>;
+
+function setMenu(open:boolean){
+  if (!tbMenu || !mobileMenu) return;
+  tbMenu.setAttribute('aria-expanded', String(open));
+  mobileMenu.setAttribute('aria-hidden', String(!open));
+  mobileMenu.classList.toggle('open', open);
+}
+
+if (tbMenu && mobileMenu){
+  tbMenu.addEventListener('click', (e)=>{
+    e.stopPropagation();
+    const isOpen = tbMenu.getAttribute('aria-expanded') === 'true';
+    setMenu(!isOpen);
+  });
+
+  mobileMenu.addEventListener('click', (e)=>{
+    const target = e.target as HTMLElement;
+    if (target && target.matches('.menu-item,[data-open]')){
+      // let the [data-open] handler open the window, then close menu
+      setTimeout(()=> setMenu(false), 0);
+    }
+  });
+
+  // Close on outside click or ESC
+  document.addEventListener('click', (e)=>{
+    const isOpen = tbMenu.getAttribute('aria-expanded') === 'true';
+    if (!isOpen) return;
+    if (!mobileMenu.contains(e.target as Node) && e.target !== tbMenu){
+      setMenu(false);
+    }
+  });
+  document.addEventListener('keydown', (e)=>{
+    if (e.key === 'Escape') setMenu(false);
+  });
+}
 
 

@@ -6,6 +6,7 @@
   --muted:#2b2b2b;
   --maxw:1200px;
   --bar-brass:#c08a3e; /* dynamic tint base */
+  --accent: hsl(28 95% 58%); /* minimal orange accent */
 
   /* Win98 palette */
   --win-face:#c0c0c0;
@@ -20,7 +21,6 @@
 
 *{box-sizing:border-box}
 html,body{margin:0;padding:0;background:var(--bg);color:var(--ink);font:14px/1.4 Tahoma,"Microsoft Sans Serif",system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;-webkit-text-size-adjust:100%}
-a{color:var(--ink);text-decoration:none}
 a{color:var(--ink);text-decoration:none}
 a:hover{opacity:.9}
 .titlebar{touch-action:none}
@@ -38,11 +38,20 @@ body.theme-modern .desktop{background:transparent}
 /* Taskbar (Win98 default) */
 .taskbar{position:fixed;left:0;right:0;bottom:0;height:32px;background:var(--win-face);border-top:1px solid var(--win-dark);box-shadow:inset 0 1px 0 var(--win-highlight), inset 0 -1px 0 var(--win-shadow);display:flex;align-items:center;gap:6px;padding:4px 6px}
 .taskbar .spacer{flex:1}
-.task-button{position:relative;padding:4px 10px;min-width:84px;height:24px;color:var(--win-text);cursor:pointer;background:var(--win-face);border:1px solid var(--win-dark);box-shadow:inset -1px -1px 0 var(--win-shadow), inset 1px 1px 0 var(--win-highlight);transition:none;border-radius:0}
+.task-button{position:relative;padding:4px 10px;min-width:84px;height:24px;color:var(--win-text);cursor:pointer;background:var(--win-face);border:1px solid var(--win-dark);box-shadow:inset -1px -1px 0 var(--win-shadow), inset 1px 1px 0 var(--win-highlight);transition:none;border-radius:0;text-align:center;display:inline-flex;align-items:center;justify-content:center}
 .task-button:hover{filter:brightness(1.02)}
 .task-button.pulsing-static{box-shadow:inset 1px 1px 0 var(--win-shadow), inset -1px -1px 0 var(--win-highlight)}
 .task-button{ --pulse:0; --hue:40; }
 .task-button.pulsing::before{content:""; position:absolute; left:0; right:0; bottom:-2px; height:2px; background:hsl(var(--hue,40) 80% 45% / .9); transform-origin:left center; transform:scaleX(var(--pulse,0));}
+
+/* Center hamburger icon in Win98/ME and Modern */
+#tb-menu{
+  display:inline-flex; align-items:center; justify-content:center;
+  font-weight:700; line-height:1; text-align:center;
+}
+body.theme-modern #tb-menu{
+  display:inline-flex; align-items:center; justify-content:center;
+}
 
 /* Taskbar right area: theme select + clock */
 .task-controls{display:flex;align-items:center;gap:8px}
@@ -50,11 +59,28 @@ body.theme-modern .desktop{background:transparent}
 .task-clock{min-width:92px;text-align:center;border:1px solid var(--win-dark);background:var(--win-face);box-shadow:inset -1px -1px 0 var(--win-shadow), inset 1px 1px 0 var(--win-highlight);padding:2px 6px;height:24px;display:grid;place-items:center;font-variant-numeric:tabular-nums}
 
 /* Mobile menu - só visível em mobile */
-.mobile-only{display:none !important}
-.mobile-menu{position:fixed;left:8px;right:8px;bottom:64px;background:var(--win-face);border:1px solid var(--win-dark);box-shadow:inset -1px -1px 0 var(--win-shadow), inset 1px 1px 0 var(--win-highlight);border-radius:8px;padding:8px;display:none;flex-direction:column;gap:6px;z-index:1000}
-.mobile-menu[aria-hidden="false"]{display:flex}
-.menu-item{padding:10px;border:1px solid var(--win-dark);background:var(--win-face);box-shadow:inset -1px -1px 0 var(--win-shadow), inset 1px 1px 0 var(--win-highlight);text-align:left}
-.menu-item:active{box-shadow:inset 1px 1px 0 var(--win-shadow), inset -1px -1px 0 var(--win-highlight)}
+.mobile-only{display:none}
+.mobile-menu{
+  position:fixed; left:8px; right:auto; bottom:64px;
+  background:#1a1a1a; color:#fff;
+  border:1px solid rgba(255,255,255,.18);
+  box-shadow:0 20px 60px rgba(0,0,0,.45);
+  border-radius:8px; padding:10px;
+  display:none; flex-direction:column; gap:6px;
+  min-width:220px; min-height:120px;
+  z-index:2000;
+}
+.mobile-menu[aria-hidden="false"]{display:flex !important}
+.mobile-menu.open{ display:flex !important }
+
+.menu-item{
+  color:#fff;
+  padding:10px; text-align:left;
+  border:1px solid rgba(255,255,255,.18);
+  background:#2a2a2a;
+  box-shadow:none; border-radius:6px;
+}
+.menu-item:active{ filter:brightness(1.1) }
 
 /* Waves background - só no tema moderno */
 .waves{display:none; position:fixed; inset:0; z-index:-3; background-color:transparent; pointer-events:none}
@@ -65,6 +91,9 @@ body.theme-modern .scrim{display:none !important}
 /* Garantir que o fundo seja transparente para as Waves */
 body.theme-modern{background:transparent !important}
 body.theme-modern html{background:transparent !important}
+body.theme-modern .desktop{background:transparent !important}
+/* Remover fundo azul do Windows ME no tema moderno */
+body.theme-modern{--bg:transparent !important}
 
 /* Windows (Win98 default) */
 .win{ --tint: var(--bar-brass); position:absolute;top:14vh;left:8vw;width:min(720px,90vw);max-width:90vw;max-height:72vh;display:flex;flex-direction:column;background:var(--win-face);border:1px solid var(--win-dark);box-shadow:inset -1px -1px 0 var(--win-shadow), inset 1px 1px 0 var(--win-highlight);border-radius:0 }
@@ -86,8 +115,6 @@ body.theme-modern html{background:transparent !important}
 .item{padding:12px 0;border-bottom:1px solid rgba(0,0,0,.15)}
 .item:last-child{border-bottom:none}
 
-/* (removed circular gallery styles) */
-
 /* Z stacking */
 .win{z-index:10}
 .win.active{z-index:100}
@@ -107,6 +134,13 @@ body.theme-modern html{background:transparent !important}
 .bar{width:3px;height:4px;background:#9cff7a;opacity:.85;transition:height .08s linear}
 .player.playing .bar{height:calc(3px + 9px * var(--l,.5))}
 .vol{width:160px;max-width:50vw}
+.sens{width:180px;max-width:60vw}
+.sens-label{font-size:12px; opacity:.8}
+
+/* Subtle keyboard hints */
+.kbd-hints{position:fixed; top:10px; right:12px; z-index:2500; font:11px/1.4 system-ui, -apple-system, Segoe UI, Roboto, Arial; color:rgba(255,255,255,.75); background:rgba(0,0,0,.25); padding:6px 8px; border-radius:8px; backdrop-filter:blur(6px); opacity:.6; pointer-events:none}
+body:not(.theme-modern) .kbd-hints{ color:#000; background:rgba(255,255,255,.65) }
+.kbd-hints:hover{opacity:.9}
 
 /* Reduced motion */
 @media (prefers-reduced-motion:reduce){
@@ -126,6 +160,11 @@ body.theme-modern .scrim{position:fixed;inset:0;z-index:-1;display:block;backgro
   radial-gradient(60% 50% at 20% 70%, rgba(125,179,155,.08), transparent 60%),
   linear-gradient(to bottom, rgba(10,10,10,.08), rgba(10,10,10,.88));
 }
+
+/* Garantir que o fundo seja transparente para as Waves no tema moderno */
+body.theme-modern{background:transparent !important}
+body.theme-modern html{background:transparent !important}
+body.theme-modern .desktop{background:transparent}
 
 body.theme-modern .taskbar{left:12px;right:12px;bottom:12px;height:48px;border:1px solid rgba(255,255,255,.12);border-radius:12px;backdrop-filter:blur(10px);background:rgba(12,12,12,.55);box-shadow:none;padding:8px 10px;gap:10px}
 body.theme-modern .task-button{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:8px 12px;border-radius:10px;border:1px solid rgba(255,255,255,.16);background:rgba(20,20,20,.45);color:var(--ink);box-shadow:none;line-height:1;text-align:center}
@@ -153,14 +192,58 @@ body.theme-modern .win::before{content:"";position:absolute;inset:0;border-radiu
 body.theme-modern .btn-rect{padding:8px 10px;border-radius:6px;border:1px solid color-mix(in oklab, var(--tint), transparent 45%);background:rgba(25,25,25,.65);color:#fff;box-shadow:inset 0 0 0 1px color-mix(in oklab, var(--tint), transparent 82%);display:flex;align-items:center;justify-content:center}
 body.theme-modern .btn-rect:hover{background:rgba(35,35,35,.72)}
 
-/* Responsive: Mobile adaptations */
+/* Modern theme: mobile menu glass look + white text */
+body.theme-modern .mobile-menu{ 
+  background:rgba(20,20,20,.72); 
+  border:1px solid rgba(255,255,255,.16); 
+  border-radius:12px; 
+  backdrop-filter:blur(10px) saturate(110%);
+  box-shadow:0 20px 60px rgba(0,0,0,.45);
+  left:12px; right:auto; /* anchor to left like Start */
+  color:#fff;
+}
+body.theme-modern .mobile-menu .menu-item{
+  border-radius:8px; 
+  border:1px solid rgba(255,255,255,.12); 
+  background:rgba(28,28,28,.55);
+  color:#fff;
+}
+body.theme-modern .mobile-menu .menu-item + .menu-item{ margin-top:6px }
+
+/* Responsive: Menu hambúrguer aparece quando não há espaço para todos os botões */
+@media (max-width: 1200px){
+  .taskbar{height:48px;padding:6px 8px max(6px, env(safe-area-inset-bottom));gap:6px}
+  /* Hide all task buttons except the hamburger */
+  .taskbar .task-button:not(.mobile-only){display:none !important}
+  /* Show hamburger and keep it on the left where tabs were */
+  .taskbar .mobile-only{display:inline-flex !important; order:0}
+  /* Keep controls on the right */
+  .taskbar .spacer{display:block}
+  .taskbar .task-controls{gap:6px}
+  .theme-select{height:32px;font-size:14px;border-radius:8px}
+  .task-clock{height:32px;min-width:96px;border-radius:8px}
+  /* Window sizing */
+  .win{left:6px;right:6px;width:auto;top:10vh;max-height:calc(100svh - 140px)}
+  .titlebar{padding:8px 10px;height:36px}
+  .window-controls{gap:8px}
+  .ctl{width:28px;height:24px}
+  .content{padding:10px}
+  .player .row{gap:10px}
+  .btn-rect{min-height:32px}
+  .vol{width:100%;max-width:none}
+}
+
+/* Garantir que o menu hambúrguer só apareça quando necessário */
+@media (min-width: 1201px){
+  .mobile-only{display:none !important}
+}
+
+/* Mobile completo */
 @media (max-width: 768px){
   html,body{font-size:15px}
   .desktop{min-height:100svh}
   .taskbar{height:56px;padding:8px 8px max(8px, env(safe-area-inset-bottom));gap:6px}
   .task-button{min-width:64px;height:36px;padding:0 10px;border-radius:8px}
-  .task-button:not(.mobile-only){display:none}
-  .mobile-only{display:inline-flex !important}
   .task-controls{gap:6px}
   .theme-select{height:32px;font-size:14px;border-radius:8px}
   .task-clock{height:32px;min-width:96px;border-radius:8px}
@@ -177,4 +260,5 @@ body.theme-modern .btn-rect:hover{background:rgba(35,35,35,.72)}
   body.theme-modern .taskbar{border-radius:14px}
 }
 
-
+/* Default (Win98) menu also anchors from the left bottom (matches "Start" behavior) */
+.mobile-menu{ left:8px; right:auto; bottom:64px; }

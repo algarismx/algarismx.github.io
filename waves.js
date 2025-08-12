@@ -2,6 +2,9 @@
 // Exposes window.WavesController.mount()/unmount() so we can tie it to theme
 console.log('Waves.js loading...');
 (function(){
+  // Audio-reactive globals
+  let audioAnalyser = null, audioData = null, audioLevel = 0, baseConfig = null;
+  let sensitivity = 1.2;
   function Grad(x,y,z){ this.x=x; this.y=y; this.z=z; }
   Grad.prototype.dot2=function(x,y){ return this.x*x + this.y*y; };
   function Noise(seed){
@@ -20,6 +23,8 @@ console.log('Waves.js loading...');
       lineColor:'#fff', backgroundColor:'rgba(255,255,255,0.2)', waveSpeedX:0.02, waveSpeedY:0.01,
       waveAmpX:40, waveAmpY:20, friction:0.9, tension:0.01, maxCursorMove:120, xGap:12, yGap:36
     }, opts||{});
+    // Store base amplitudes for audio modulation
+    baseConfig = { waveAmpX: config.waveAmpX, waveAmpY: config.waveAmpY };
     const container=document.createElement('div'); container.className='waves'; container.style.position='fixed'; container.style.inset='0'; container.style.zIndex='-3'; container.style.backgroundColor=config.backgroundColor;
     const canvas=document.createElement('canvas'); canvas.className='waves-canvas'; container.appendChild(canvas);
     document.body.appendChild(container);
@@ -30,9 +35,63 @@ console.log('Waves.js loading...');
     const mouse={ x:-10,y:0,lx:0,ly:0,sx:0,sy:0, v:0,vs:0,a:0,set:false };
     function setSize(){ const r=container.getBoundingClientRect(); bounding.width=r.width; bounding.height=r.height; canvas.width=r.width; canvas.height=r.height; }
     function setLines(){ const {width,height}=bounding; lines=[]; const oWidth=width+200, oHeight=height+30; const totalLines=Math.ceil(oWidth/config.xGap); const totalPoints=Math.ceil(oHeight/config.yGap); const xStart=(width - config.xGap*totalLines)/2; const yStart=(height - config.yGap*totalPoints)/2; for(let i=0;i<=totalLines;i++){ const pts=[]; for(let j=0;j<=totalPoints;j++){ pts.push({ x:xStart+config.xGap*i, y:yStart+config.yGap*j, wave:{x:0,y:0}, cursor:{x:0,y:0,vx:0,vy:0} }); } lines.push(pts); } }
-    function movePoints(time){ lines.forEach(pts=>{ pts.forEach(p=>{ const move=noise.perlin2((p.x+time*config.waveSpeedX)*0.002, (p.y+time*config.waveSpeedY)*0.0015)*12; p.wave.x=Math.cos(move)*config.waveAmpX; p.wave.y=Math.sin(move)*config.waveAmpY; const dx=p.x-mouse.sx, dy=p.y-mouse.sy; const dist=Math.hypot(dx,dy), l=Math.max(175, mouse.vs); if(dist<l){ const s=1-dist/l; const f=Math.cos(dist*0.001)*s; p.cursor.vx += Math.cos(mouse.a)*f*l*mouse.vs*0.00065; p.cursor.vy += Math.sin(mouse.a)*f*l*mouse.vs*0.00065; } p.cursor.vx += (0-p.cursor.x)*config.tension; p.cursor.vy += (0-p.cursor.y)*config.tension; p.cursor.vx *= config.friction; p.cursor.vy *= config.friction; p.cursor.x += p.cursor.vx*2; p.cursor.y += p.cursor.vy*2; p.cursor.x = Math.min(config.maxCursorMove, Math.max(-config.maxCursorMove, p.cursor.x)); p.cursor.y = Math.min(config.maxCursorMove, Math.max(-config.maxCursorMove, p.cursor.y)); }); }); }
+    function movePoints(time){
+      // Audio-reactive: update audioLevel and modulate amplitudes
+      if (audioAnalyser && audioData){
+        audioAnalyser.getByteFrequencyData(audioData);
+        let sum=0; for(let i=0;i<audioData.length;i++) sum+=audioData[i];
+        const avg = sum / audioData.length;
+        audioLevel = Math.min(1, avg / 255);
+      } else { audioLevel = 0; }
+      // Modulate amplitudes
+      const ampX = baseConfig ? baseConfig.waveAmpX * (1 + audioLevel * (0.8 * sensitivity)) : config.waveAmpX;
+      const ampY = baseConfig ? baseConfig.waveAmpY * (1 + audioLevel * (0.8 * sensitivity)) : config.waveAmpY;
+      lines.forEach(pts=>{
+        pts.forEach(p=>{
+          const move=noise.perlin2((p.x+time*config.waveSpeedX)*0.002, (p.y+time*config.waveSpeedY)*0.0015)*12;
+          p.wave.x=Math.cos(move)*ampX;
+          p.wave.y=Math.sin(move)*ampY;
+          const dx=p.x-mouse.sx, dy=p.y-mouse.sy;
+          const dist=Math.hypot(dx,dy), l=Math.max(175, mouse.vs);
+          if(dist<l){
+            const s=1-dist/l;
+            const f=Math.cos(dist*0.001)*s;
+            p.cursor.vx += Math.cos(mouse.a)*f*l*mouse.vs*0.00065;
+            p.cursor.vy += Math.sin(mouse.a)*f*l*mouse.vs*0.00065;
+          }
+          p.cursor.vx += (0-p.cursor.x)*config.tension;
+          p.cursor.vy += (0-p.cursor.y)*config.tension;
+          p.cursor.vx *= config.friction;
+          p.cursor.vy *= config.friction;
+          p.cursor.x += p.cursor.vx*2;
+          p.cursor.y += p.cursor.vy*2;
+          p.cursor.x = Math.min(config.maxCursorMove, Math.max(-config.maxCursorMove, p.cursor.x));
+          p.cursor.y = Math.min(config.maxCursorMove, Math.max(-config.maxCursorMove, p.cursor.y));
+        });
+      });
+    }
     function moved(p, withCursor){ const x=p.x + p.wave.x + (withCursor?p.cursor.x:0); const y=p.y + p.wave.y + (withCursor?p.cursor.y:0); return { x:Math.round(x*10)/10, y:Math.round(y*10)/10 }; }
-    function drawLines(){ const {width,height}=bounding; ctx.clearRect(0,0,width,height); ctx.beginPath(); ctx.strokeStyle=config.lineColor; lines.forEach(points=>{ let p1=moved(points[0], false); ctx.moveTo(p1.x,p1.y); points.forEach((p,idx)=>{ const isLast=idx===points.length-1; p1=moved(p,!isLast); const p2=moved(points[idx+1] || points[points.length-1], !isLast); ctx.lineTo(p1.x,p1.y); if(isLast) ctx.moveTo(p2.x,p2.y); }); }); ctx.stroke(); }
+    function drawLines(){
+      const {width,height}=bounding;
+      ctx.clearRect(0,0,width,height);
+      ctx.beginPath();
+      // Audio-reactive: line width and alpha
+      ctx.lineWidth = 1 + audioLevel * (1.5 * Math.min(2, sensitivity));
+      const a = Math.min(1, .55 + audioLevel * (0.45 * Math.min(2, sensitivity)));
+      ctx.strokeStyle = `rgba(255,255,255,${a})`;
+      lines.forEach(points=>{
+        let p1=moved(points[0], false);
+        ctx.moveTo(p1.x,p1.y);
+        points.forEach((p,idx)=>{
+          const isLast=idx===points.length-1;
+          p1=moved(p,!isLast);
+          const p2=moved(points[idx+1] || points[points.length-1], !isLast);
+          ctx.lineTo(p1.x,p1.y);
+          if(isLast) ctx.moveTo(p2.x,p2.y);
+        });
+      });
+      ctx.stroke();
+    }
     function tick(t){ mouse.sx += (mouse.x-mouse.sx)*0.1; mouse.sy += (mouse.y-mouse.sy)*0.1; const dx=mouse.x-mouse.lx, dy=mouse.y-mouse.ly; const d=Math.hypot(dx,dy); mouse.v=d; mouse.vs += (d-mouse.vs)*0.1; mouse.vs=Math.min(100, mouse.vs); mouse.lx=mouse.x; mouse.ly=mouse.y; mouse.a=Math.atan2(dy,dx); movePoints(t); drawLines(); frameId=requestAnimationFrame(tick); }
     function onResize(){ setSize(); setLines(); }
     function updateMouse(x,y){ const b=container.getBoundingClientRect(); mouse.x=x-b.left; mouse.y=y-b.top; if(!mouse.set){ mouse.sx=mouse.x; mouse.sy=mouse.y; mouse.lx=mouse.x; mouse.ly=mouse.y; mouse.set=true; } }
@@ -44,11 +103,19 @@ console.log('Waves.js loading...');
     window.addEventListener('touchmove', onTouchMove, { passive:true });
     this._state={ container, frameId, handlers:[onResize,onMouseMove,onTouchMove] };
   },
-  unmount(){ const s=this._state; if(!s) return; window.removeEventListener('resize', s.handlers[0]); window.removeEventListener('mousemove', s.handlers[1]); window.removeEventListener('touchmove', s.handlers[2]); cancelAnimationFrame(s.frameId); s.container.remove(); this._state=null; }
+  unmount(){ const s=this._state; if(!s) return; window.removeEventListener('resize', s.handlers[0]); window.removeEventListener('mousemove', s.handlers[1]); window.removeEventListener('touchmove', s.handlers[2]); cancelAnimationFrame(s.frameId); s.container.remove(); this._state=null; },
+  attachAnalyser(an){
+    try{
+      audioAnalyser = an || null;
+      audioData = audioAnalyser ? new Uint8Array(audioAnalyser.frequencyBinCount) : null;
+    }catch(e){ console.warn('attachAnalyser error', e); }
+  },
+  setSensitivity(val){
+    const n = Number(val);
+    if (!isNaN(n)) sensitivity = Math.max(0.2, Math.min(5, n));
+  }
   };
   window.WavesController = WavesController;
   console.log('WavesController created:', !!window.WavesController);
   console.log('WavesController methods:', Object.keys(window.WavesController));
 })();
-
-
