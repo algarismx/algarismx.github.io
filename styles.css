@@ -154,11 +154,12 @@ body.theme-modern .btn-rect{padding:8px 10px;border-radius:6px;border:1px solid 
 body.theme-modern .btn-rect:hover{background:rgba(35,35,35,.72)}
 
 /* Responsive: Mobile adaptations */
-@media (max-width: 640px){
+@media (max-width: 768px){
   html,body{font-size:15px}
   .desktop{min-height:100svh}
   .taskbar{height:56px;padding:8px 8px max(8px, env(safe-area-inset-bottom));gap:6px}
   .task-button{min-width:64px;height:36px;padding:0 10px;border-radius:8px}
+  .task-button:not(.mobile-only){display:none}
   .mobile-only{display:inline-flex !important}
   .task-controls{gap:6px}
   .theme-select{height:32px;font-size:14px;border-radius:8px}
