@@ -1,5 +1,6 @@
 // Basic TS types
 type Nullable<T> = T | null;
+type WebAudioWindow = Window & typeof globalThis & { webkitAudioContext?: typeof AudioContext };
 
 // Elements
 const wins: HTMLElement[] = Array.from(document.querySelectorAll('.win')) as HTMLElement[];
@@ -111,7 +112,8 @@ winPlayer.style.setProperty('--tint', 'transparent');
 let ctx: AudioContext | null = null, src: MediaElementAudioSourceNode | null = null, analyser: AnalyserNode | null = null, data: Uint8Array | null = null;
 function ensureAudioGraph(){
   if(ctx) return;
-  ctx = new (window.AudioContext||window.webkitAudioContext)();
+  const AC = (window as WebAudioWindow).AudioContext || (window as WebAudioWindow).webkitAudioContext!;
+  ctx = new AC();
   src = (ctx as AudioContext).createMediaElementSource(audio);
   analyser = (ctx as AudioContext).createAnalyser();
   (analyser as AnalyserNode).fftSize = 256;
