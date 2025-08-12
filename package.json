@@ -1,5 +1,11 @@
 {
   "devDependencies": {
     "typescript": "^5.9.2"
+  },
+  "dependencies": {
+    "@react-three/fiber": "^9.3.0",
+    "@react-three/postprocessing": "^3.0.4",
+    "postprocessing": "^6.37.7",
+    "three": "^0.179.1"
   }
 }

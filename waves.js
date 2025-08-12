@@ -4,7 +4,7 @@ console.log('Waves.js loading...');
 (function(){
   // Audio-reactive globals
   let audioAnalyser = null, audioData = null, audioLevel = 0, baseConfig = null;
-  let sensitivity = 1.2;
+  let sensitivity = 0.75;
   function Grad(x,y,z){ this.x=x; this.y=y; this.z=z; }
   Grad.prototype.dot2=function(x,y){ return this.x*x + this.y*y; };
   function Noise(seed){
