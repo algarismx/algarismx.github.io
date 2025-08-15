@@ -1,0 +1,117 @@
+; ================================
+; Gestão de textos do site algarismx
+; — Um ficheiro, vários idiomas/zonas
+; — Secções tipo [about.pt], [about.en], [portfolio.pt], ...
+; — Parágrafos separados por LINHA VAZIA
+; — Comentários começam por ; (ponto e vírgula) ou #
+; ================================
+
+[about.pt]
+Olá! O meu nome é Ricardo Melgar, também conhecido como algarismx, e tenho 26 anos.
+
+Sou produtor musical, sound designer e técnico de som, apaixonado por sampling e manipulação de áudio.
+
+A música acompanha-me desde miúdo, com influências que vão do synthpop dos anos 80 ao pop, hip-hop e R&B dos anos 90. Hoje em dia, dedico-me sobretudo a produzir Jungle, Drum & Bass, Vaporwave e Hip-Hop.
+
+Trabalho principalmente em Ableton Live, mas também tenho experiência com Pro Tools. Com formação em programação, desenvolvi uma abordagem muito própria à produção musical. Aquilo que começou como um hobby aos 16 anos acabou por me levar a tirar o curso de Criação Musical, Produção e Técnicas de Som na ETIC_Algarve, em Faro, onde transformei a paixão em carreira.
+
+Durante o curso, tive a oportunidade de realizar um estágio Erasmus+ de três meses na Soundsgate, em Praga (República Checa). Uma das experiências mais marcantes foi trabalhar como técnico de som e assistente no Composers Summit 2023.
+
+No final da formação, estagiei no estúdio do produtor e DJ Sickonce (Rafael Correia), em Portimão, participando em diversas sessões de gravação, edição e pós-produção para vários artistas.
+
+Atualmente, integro o Departamento de Som & Música da ETIC_Algarve, onde trabalho como assistente de som e formador.
+
+Aqui podes conhecer alguns dos meus trabalhos como músico, sound designer e produtor.
+
+Espero que gostes!
+Ricardo Melgar
+
+[about.en]
+Hi! My name is Ricardo Melgar, also known as algarismx, and I’m 26 years old.
+
+I’m a music producer, sound designer, and sound technician with a passion for sampling and audio manipulation.
+
+Music has been part of my life since I was a kid, with influences ranging from 80s synthpop to 90s pop, hip-hop, and R&B. These days, I focus mainly on producing Jungle, Drum & Bass, Vaporwave, and Hip-Hop.
+
+I work primarily in Ableton Live, but I’m also experienced with Pro Tools. With a background in programming, I’ve developed a unique approach to music production. What began as a hobby at 16 eventually led me to study Music Creation, Production and Sound Techniques at ETIC_Algarve in Faro, where I turned my passion into a career.
+
+During my studies, I had the opportunity to take part in a three-month Erasmus+ internship at Soundsgate in Prague, Czech Republic. One of the highlights was working as a sound technician and assistant at the Composers Summit 2023.
+
+Towards the end of my course, I interned at the studio of music producer and DJ Sickonce (Rafael Correia) in Portimão, contributing to several recording, editing, and post-production sessions for various artists.
+
+I’m currently part of the Sound & Music Department at ETIC_Algarve, where I work as both a sound assistant and a teacher.
+
+Here you can discover some of my work as a musician, sound designer, and music producer.
+
+Hope you enjoy it!
+Ricardo Melgar
+
+; ----- Secções opcionais (edita como quiseres) -----
+
+[portfolio.pt]
+SoundCloud — algarismx
+Faixas originais, mixes e experiências sonoras.
+
+Demos & inéditas
+“Sempre Que Eu Quiser”, “Making Love”, “Gal”, “Boombap 101”, “Amen Dubplate Contest”, “Porque Eu”, “Paddy”, “Drum Pattern”, “Japanese Jungle”.
+
+Global Game Jam 2023 — "Hair We Go!"
+SFX e OST (Tema Principal, Menu Secundário, Menu).
+
+[portfolio.en]
+SoundCloud — algarismx
+Original tracks, mixes and sound experiments.
+
+Demos & unreleased
+“Sempre Que Eu Quiser”, “Making Love”, “Gal”, “Boombap 101”, “Amen Dubplate Contest”, “Porque Eu”, “Paddy”, “Drum Pattern”, “Japanese Jungle”.
+
+Global Game Jam 2023 — "Hair We Go!"
+SFX and OST (Main Theme, Secondary Menu, Menu).
+
+[etic.pt]
+ETIC Algarve — 2020–2023
+Projetos em produção musical, foley, sound design e gravação para vídeo/jogos.
+
+Podcast — “J Dilla…”
+Mestre da Vida (curta)
+Foley — Cinema/Vídeo
+Projeto “Lábia — Tráfico Humano”
+Produção Musical para Videojogos
+Mastering
+Podcast — “Genesis of Sound”
+“Bankruptcy”
+Performance LiveInsight
+Erasmus+ — “Sampling Prague”
+
+[etic.en]
+ETIC Algarve — 2020–2023
+Projects in music production, foley, sound design and recording for video/games.
+
+Podcast — “J Dilla…”
+Mestre da Vida (short film)
+Foley — Cinema/Video
+Project “Lábia — Human Trafficking”
+Videogame Music Production
+Mastering
+Podcast — “Genesis of Sound”
+“Bankruptcy”
+LiveInsight Performance
+Erasmus+ — “Sampling Prague”
+
+[professional.pt]
+Sessões de gravação, edição e pós‑produção com artistas locais e nacionais.
+Trabalhos de sound design e mistura por encomenda.
+
+[professional.en]
+Recording, editing and post‑production sessions with local and national artists.
+Commissioned sound design and mixing work.
+
+[contact.pt]
+Email: ricardo@algarismx.pt
+LinkedIn: @algarismx
+Instagram: @algarismx
+
+[contact.en]
+Email: ricardo@algarismx.pt
+LinkedIn: @algarismx
+Instagram: @algarismx

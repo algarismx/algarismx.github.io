@@ -25,7 +25,48 @@ function getSafeBounds(){
   const maxY = window.innerHeight - bottom - pad;
   return { minX, minY, maxX, maxY };
 }
+function getSafeSize(){
+  const sb = getSafeBounds();
+  return { safeW: sb.maxX - sb.minX, safeH: sb.maxY - sb.minY };
+}
 function clamp(n,min,max){ return Math.max(min, Math.min(max, n)); }
+
+// Ajusta tamanho e posição para não ultrapassar as taskbars
+function fitAndClamp(win){
+  const sb = getSafeBounds();
+  const { safeW, safeH } = getSafeSize();
+  const pad = 8;
+
+  const maxW = Math.max(320, safeW - pad*2);
+  const maxH = Math.max(220, safeH - pad*2);
+
+  const curW = win.offsetWidth || maxW;
+  const curH = win.offsetHeight || maxH;
+  if (curW > maxW) win.style.width  = maxW + 'px';
+  if (curH > maxH) win.style.height = maxH + 'px';
+
+  const ww = win.offsetWidth;
+  const wh = win.offsetHeight;
+
+  const left = parseInt(getComputedStyle(win).left) || 0;
+  const top  = parseInt(getComputedStyle(win).top)  || 0;
+  const nx = clamp(left, sb.minX, Math.max(sb.minX, sb.maxX - ww));
+  const ny = clamp(top,  sb.minY, Math.max(sb.minY, sb.maxY - wh));
+  win.style.left = nx + 'px';
+  win.style.top  = ny + 'px';
+
+  win.style.maxHeight = (sb.maxY - ny - pad) + 'px';
+}
+
+function centerWindow(win){
+  const sb = getSafeBounds();
+  const ww = win.offsetWidth, wh = win.offsetHeight;
+  const nx = Math.max(sb.minX, Math.round((window.innerWidth - ww)/2));
+  const ny = Math.max(sb.minY, Math.round((sb.maxY - sb.minY - wh)/2) + sb.minY);
+  win.style.left = nx + 'px';
+  win.style.top  = ny + 'px';
+  fitAndClamp(win);
+}
 
 // ===== THEME + WAVES =====
 function wavesMountForTheme(){
@@ -60,26 +101,62 @@ if (themeSelect){
   });
 }
 
-// ===== I18N + LOADER + Now Playing label =====
-function applyI18n(lang){
+// ===== TEXTOS: carregar e injetar a partir de textos.txt =====
+let TEXTS = {}; // { "about.pt": "...", "about.en": "...", ... }
+
+async function loadTextDB(){
+  const res = await fetch('textos.txt', { cache: 'no-store' });
+  if (!res.ok) throw new Error('textos.txt not found');
+  const raw = await res.text();
+  TEXTS = parseTextDB(raw);
+}
+
+function parseTextDB(raw){
+  const out = {};
+  let cur = null, buf = [];
+  const lines = raw.replace(/\r\n?/g, '\n').split('\n');
+  function flush(){
+    if (cur){ out[cur] = buf.join('\n').trim(); }
+    buf = [];
+  }
+  for (let line of lines){
+    if (/^\s*[;#]/.test(line)) continue;
+    const m = line.match(/^\s*\[([^\]]+)\]\s*$/);
+    if (m){ flush(); cur = m[1].trim(); if (!(cur in out)) out[cur] = ''; continue; }
+    if (cur) buf.push(line);
+  }
+  flush();
+  return out;
+}
+
+function escapeHTML(s){
+  return s.replace(/[&<>"']/g, ch =>
+    ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
+}
+function toParagraphs(text){
+  const t = (text || '').trim();
+  if (!t) return '';
+  const parts = t.split(/\n\s*\n/);
+  return parts.map(p => `<p>${escapeHTML(p).replace(/\n/g,'<br>')}</p>`).join('\n');
+}
+function setHTML(id, html){
+  const el = document.getElementById(id);
+  if (el) el.innerHTML = html || '';
+}
+
+// ===== I18N (rótulos UI) =====
+function applyI18nLabels(lang){
   const I18N = {
     en:{tbPlayer:'Player',tbPortfolio:'Portfolio',tbEtic:'ETIC',tbPro:'Professional',tbAbout:'About',tbContact:'Contact',
         titlePlayer:'Leitor',titlePortfolio:'Personal Portfolio',titleEtic:'ETIC',titlePro:'Professional',titleAbout:'About',titleContact:'Contact',
-        btnPlay:'▶',btnPause:'❚❚',btnStop:'■', nowPlayingLabel:'Now playing:',
-        portfolioHTML:'<div class="item"><strong>SoundCloud — algarismx</strong><br><span class="muted">Original tracks, mixes and sound experiments.</span></div><div class="item"><strong>Demos &amp; unreleased</strong><br><span class="muted">“Sempre Que Eu Quiser”, “Making Love”, “Gal”, “Boombap 101”, “Amen Dubplate Contest”, “Porque Eu”, “Paddy”, “Drum Pattern”, “Japanese Jungle”.</span></div><div class="item"><strong>Global Game Jam 2023 — <em>Hair We Go!</em></strong><br><span class="muted">SFX and OST (Main Theme, Secondary Menu, Menu).</span></div>',
-        eticHTML:'<div class="item"><strong>ETIC Algarve — 2020–2023</strong><br><span class="muted">Projects in music production, foley, sound design and recording for video/games.</span></div><div class="item">Podcast — “J Dilla…”</div><div class="item">Mestre da Vida (short film)</div><div class="item">Foley — Cinema/Video</div><div class="item">Project “Lábia — Human Trafficking”</div><div class="item">Videogame Music Production</div><div class="item">Mastering</div><div class="item">Podcast — “Genesis of Sound”</div><div class="item">“Bankruptcy”</div><div class="item">LiveInsight Performance</div><div class="item">Erasmus+ — “Sampling Prague”</div>',
-        proHTML:'<div class="item"><strong>ETIC Algarve — Diploma Delivery (2024)</strong><br><span class="muted">Continuous composition per course + specific SFX.</span></div><div class="item"><strong>Internal technical support</strong><br><span class="muted">Recordings with students and teachers; equipment maintenance and management.</span></div><div class="item"><strong>Short films and documentaries</strong><br><span class="muted">Sound direction, timecode sync and multi‑monitoring.</span></div>',
-        aboutHTML:`<p>Hi! My name is Ricardo a.k.a downware and I'm 24 years old.</p><p>I am a music producer, sound designer and sound technician with a love for sampling and audio manipulation.</p><p>Since I was a kid, I have been interested in music, with my main influences being 80s and 90s Pop, Hip-Hop, and R&amp;B.</p><p>Currently, I produce Jungle, Drum&amp;Bass, Vaporwave, and Hip-Hop.</p><p>I primarily work with Ableton Live but also have experience working with Pro Tools.</p><p>I have a background in programming, but producing music has been a hobby of mine since I was 16. This hobby led me to pursue a course in Music Creation and Production Techniques at ETIC_Algarve in Faro, which turned me into a professional in the field of sound and music.</p><p>Towards the end of my course, I had an internship at the studio of music producer and DJ, Sickonce (Rafael Correia), in Portimão. During the internship, I had the opportunity to participate in various recording, editing, and post-production sessions for different artists.</p><p>I was fortunate to receive an Erasmus+ scholarship from ETIC_Algarve, which allowed me to intern for three months at Soundsgate, a company in Prague, Czech Republic. Among various projects, I highlight my role as a sound technician and assistant at the Composers Summit 2023 event.</p>`},
+        btnPlay:'▶',btnPause:'❚❚',btnStop:'■', nowPlayingLabel:'Now playing:'},
     pt:{tbPlayer:'Leitor',tbPortfolio:'Portfólio',tbEtic:'ETIC',tbPro:'Profissional',tbAbout:'Sobre',tbContact:'Contacto',
         titlePlayer:'Leitor',titlePortfolio:'Portfólio Pessoal',titleEtic:'ETIC',titlePro:'Profissional',titleAbout:'Sobre',titleContact:'Contacto',
-        btnPlay:'▶',btnPause:'❚❚',btnStop:'■', nowPlayingLabel:'A tocar:',
-        portfolioHTML:'<div class="item"><strong>SoundCloud — algarismx</strong><br><span class="muted">Faixas originais, mixes e experiências sonoras.</span></div><div class="item"><strong>Demos &amp; inéditas</strong><br><span class="muted">“Sempre Que Eu Quiser”, “Making Love”, “Gal”, “Boombap 101”, “Amen Dubplate Contest”, “Porque Eu”, “Paddy”, “Drum Pattern”, “Japanese Jungle”.</span></div><div class="item"><strong>Global Game Jam 2023 — <em>Hair We Go!</em></strong><br><span class="muted">SFX e OST (Tema Principal, Menu Secundário, Menu).</span></div>',
-        eticHTML:'<div class="item"><strong>ETIC Algarve — 2020–2023</strong><br><span class="muted">Projetos em produção musical, foley, sound design e gravação para vídeo/jogos.</span></div><div class="item">Podcast — “J Dilla…”</div><div class="item">Mestre da Vida (curta-metragem)</div><div class="item">Foley — Cinema/Vídeo</div><div class="item">Projeto “Lábia — Tráfico Humano”</div><div class="item">Produção de Música para Jogos</div><div class="item">Masterização</div><div class="item">Podcast — “Génesis do Som”</div><div class="item">“Bankruptcy”</div><div class="item">LiveInsight Performance</div><div class="item">Erasmus+ — “Sampling Prague”</div>',
-        aboutHTML:`<p>Olá! Sou o Ricardo, também conhecido como downware, e tenho 24 anos.</p><p>Sou produtor musical, sound designer e técnico de som, com paixão por sampling e manipulação de áudio.</p><p>Desde pequeno que me interesso por música; as minhas principais influências são o Pop, Hip-Hop e R&amp;B dos anos 80 e 90.</p><p>Atualmente produzo Jungle, Drum&amp;Bass, Vaporwave e Hip-Hop.</p><p>Trabalho principalmente com Ableton Live, mas também tenho experiência em Pro Tools.</p><p>Tenho background em programação, mas produzir música é um hobby desde os 16 anos. Esse hobby levou-me a tirar o curso de Técnicas de Criação e Produção Musical na ETIC_Algarve, em Faro, que me tornou profissional na área do som e da música.</p><p>No final do curso, estagiei no estúdio do produtor e DJ Sickonce (Rafael Correia), em Portimão. Durante o estágio, participei em várias sessões de gravação, edição e pós-produção para diferentes artistas.</p><p>Tive a felicidade de receber uma bolsa Erasmus+ da ETIC_Algarve, que me permitiu estagiar durante três meses na Soundsgate, em Praga (República Checa). Entre vários projetos, destaco o trabalho como técnico e assistente de som no evento Composers Summit 2023.</p>`}
+        btnPlay:'▶',btnPause:'❚❚',btnStop:'■', nowPlayingLabel:'A tocar:'}
   };
   const t = I18N[lang] || I18N.en;
-  document.documentElement.setAttribute('lang', lang === 'pt' ? 'pt-PT' : 'en');
 
+  document.documentElement.setAttribute('lang', lang === 'pt' ? 'pt-PT' : 'en');
   const ls = document.getElementById('langSelect'); if (ls) ls.value = lang;
 
   const mapIds = ['titlePlayer','titlePortfolio','titleEtic','titlePro','titleAbout','titleContact','btnPlay','btnPause','btnStop'];
@@ -92,43 +169,68 @@ function applyI18n(lang){
     if(menuBtn) menuBtn.textContent=t[key];
   });
 
-  const pList=document.getElementById('portfolioList'); if(pList) pList.innerHTML=t.portfolioHTML;
-  const eList=document.getElementById('eticList'); if(eList) eList.innerHTML=t.eticHTML;
-  const proList=document.getElementById('proList'); if(proList) proList.innerHTML=t.proHTML;
-  const aboutCopy=document.getElementById('aboutCopy'); if(aboutCopy) aboutCopy.innerHTML=t.aboutHTML;
-
   const npLabel = document.getElementById('npLabel'); if (npLabel) npLabel.textContent = t.nowPlayingLabel;
 }
-function startWithLanguage(lang){
-  localStorage.setItem('lang', lang);
-  applyI18n(lang);
 
+// ===== Injetar textos carregados para a UI =====
+function injectTextsFor(lang){
+  const aboutKey = `about.${lang}`;
+  setHTML('aboutCopy', toParagraphs(TEXTS[aboutKey]));
+  const portKey = `portfolio.${lang}`;
+  const eticKey = `etic.${lang}`;
+  const proKey  = `professional.${lang}`;
+  const contKey = `contact.${lang}`;
+  setHTML('portfolioList', toParagraphs(TEXTS[portKey]));
+  setHTML('eticList',      toParagraphs(TEXTS[eticKey]));
+  setHTML('proList',       toParagraphs(TEXTS[proKey]));
+  const contactEl = document.querySelector('#win-contact .content');
+  if (contactEl && TEXTS[contKey]) contactEl.innerHTML = toParagraphs(TEXTS[contKey]);
+}
+
+// ===== LOADER & idioma =====
+async function startWithLanguage(lang){
+  localStorage.setItem('lang', lang);
+  try{ await loadTextDB(); } catch(e){ console.error('Falha a carregar textos.txt', e); }
+  applyI18nLabels(lang);
+  injectTextsFor(lang);
   const p=document.getElementById('preloader'); 
   if(p){ p.style.opacity='0'; setTimeout(()=>p.remove(), 350); }
-
-  // autoplay após loader
   try{
     ensureAudioGraph();
     if (ctx && ctx.state === 'suspended') ctx.resume();
-    audio.play().then(()=>{
-      setPlaying(true); showNowPlaying(true); updateNowPlaying();
-      clearInterval(window.__np_timer);
-      window.__np_timer = setInterval(pollNowPlaying, META_CFG.intervalMs);
-      pollNowPlaying();
-    }).catch(e=>console.warn('Autoplay blocked:', e));
+    startPlaylist();
   }catch(e){ console.warn('Autoplay error:', e); }
+  const about = document.getElementById('win-about');
+  if (about){
+    about.classList.remove('hidden');
+    bringToFront(about);
+    setTimeout(()=>centerWindow(about), 10);
+  }
 }
-// cache: aplica tradução, mas mantém loader até escolha
+
+// cache inicial + listeners do loader
 const storedLang = localStorage.getItem('lang');
-if (storedLang) { applyI18n(storedLang); const ls=document.getElementById('langSelect'); if (ls) ls.value = storedLang; }
-const enBtn=document.getElementById('chooseEN'); const ptBtn=document.getElementById('choosePT');
-if (enBtn && ptBtn){ enBtn.addEventListener('click', ()=> startWithLanguage('en')); ptBtn.addEventListener('click', ()=> startWithLanguage('pt')); }
+if (storedLang) {
+  applyI18nLabels(storedLang);
+  loadTextDB().then(()=> injectTextsFor(storedLang)).catch(()=>{});
+  const ls=document.getElementById('langSelect'); if (ls) ls.value = storedLang;
+}
+const enBtn=document.getElementById('chooseEN'); 
+const ptBtn=document.getElementById('choosePT');
+if (enBtn && ptBtn){ 
+  enBtn.addEventListener('click', ()=> startWithLanguage('en')); 
+  ptBtn.addEventListener('click', ()=> startWithLanguage('pt')); 
+}
 const langSelect = document.getElementById('langSelect');
 if (langSelect){
-  langSelect.addEventListener('change', (e)=>{
+  langSelect.addEventListener('change', async (e)=>{
     const lang = e.target.value === 'pt' ? 'pt' : 'en';
     localStorage.setItem('lang', lang);
-    applyI18n(lang);
+    if (!TEXTS || !Object.keys(TEXTS).length){
+      try{ await loadTextDB(); }catch(_){}
+    }
+    applyI18nLabels(lang);
+    injectTextsFor(lang);
   });
 }
 
@@ -140,26 +242,39 @@ function bringToFront(win) {
   win.style.zIndex = String(++zTop);
 }
 function visibleWindows(){ return wins.filter(w => !w.classList.contains('hidden')); }
+
+// tiling: ignora o leitor para não alterar o tamanho fixo
 function tileWindows(){
-  const open = visibleWindows();
-  if (open.length <= 1) return;
+  const all = visibleWindows();
+  const place = all.filter(w => w.id !== 'win-player');
+  if (place.length <= 1) return;
+
   const pad = 8;
   const sb = getSafeBounds();
   const vw = window.innerWidth;
   const vh = sb.maxY - sb.minY;
-  const cols = Math.min( Math.ceil(Math.sqrt(open.length)), 3 );
-  const rows = Math.ceil(open.length / cols);
+
+  const cols = Math.min( Math.ceil(Math.sqrt(place.length)), 3 );
+  const rows = Math.ceil(place.length / cols);
+
   const cellW = Math.max(320, Math.floor((vw - pad*(cols+1)) / cols));
   const cellH = Math.max(220, Math.floor((vh - pad*(rows+1)) / rows));
-  open.forEach((w, idx)=>{
+
+  place.forEach((w, idx)=>{
     const c = idx % cols, r = Math.floor(idx / cols);
     const left = pad + c*(cellW + pad);
     const top  = sb.minY + pad + r*(cellH + pad);
     w.style.left = clamp(left, sb.minX, sb.maxX - 200) + 'px';
     w.style.top  = clamp(top, sb.minY, sb.maxY - 140) + 'px';
+    w.style.width  = cellW + 'px';
+    w.style.height = cellH + 'px';
     w.style.maxHeight = (sb.maxY - parseInt(w.style.top) - pad) + 'px';
   });
 }
+
+// garantir limites logo no arranque
+wins.forEach(w => fitAndClamp(w));
+
 wins.forEach((win) => {
   win.addEventListener('mousedown', () => bringToFront(win));
   const tb = win.querySelector('[data-drag]');
@@ -182,7 +297,9 @@ wins.forEach((win) => {
       nx = clamp(nx, sb.minX, sb.maxX - ww);
       ny = clamp(ny, sb.minY, sb.maxY - wh);
       win.style.left = nx + 'px'; win.style.top = ny + 'px';
-    });
+      window.getSelection()?.removeAllRanges?.();
+      e.preventDefault();
+    }, { passive:false });
     window.addEventListener('mouseup', () => { dragging = false; document.body.classList.remove('is-dragging'); });
   }
   win.querySelectorAll('[data-close]').forEach(btn => {
@@ -203,6 +320,7 @@ wins.forEach((win) => {
         setTimeout(() => {
           const hue = windowHues.get(win.id);
           if (hue !== undefined) win.style.setProperty('--tint', `oklch(0.72 0.12 ${hue})`);
+          fitAndClamp(win);
         }, 10);
       } else {
         win.style.setProperty('--tint', 'transparent');
@@ -214,7 +332,7 @@ wins.forEach((win) => {
   });
 });
 
-// Tabs: toggle minimizar se já ativa
+// Tabs + hambúrguer
 document.querySelectorAll('[data-open]').forEach(btn => {
   btn.addEventListener('click', (e) => {
     const sel = e.currentTarget.getAttribute('data-open');
@@ -236,70 +354,87 @@ document.querySelectorAll('[data-open]').forEach(btn => {
     setTimeout(() => {
       const hue = windowHues.get(w.id);
       if (hue !== undefined) w.style.setProperty('--tint', `oklch(0.72 0.12 ${hue})`);
+      fitAndClamp(w);
       tileWindows();
     }, 10);
 
     const tb = e.currentTarget;
     if (sel !== '#win-player') tb.classList.add('pulsing-static');
 
-    // Fechar menu móvel ao escolher
     const mobileMenu = document.getElementById('mobileMenu');
     if (mobileMenu) { mobileMenu.setAttribute('aria-hidden','true'); const t = document.getElementById('tb-menu-top'); if (t) t.setAttribute('aria-expanded','false'); }
   });
 });
-window.addEventListener('resize', () => tileWindows());
+const tbMenuTop = document.getElementById('tb-menu-top');
+if (tbMenuTop) {
+  tbMenuTop.addEventListener('click', () => {
+    const m = document.getElementById('mobileMenu');
+    const expanded = tbMenuTop.getAttribute('aria-expanded') === 'true';
+    tbMenuTop.setAttribute('aria-expanded', String(!expanded));
+    if (m) m.setAttribute('aria-hidden', expanded ? 'true' : 'false');
+  });
+}
+window.addEventListener('resize', () => {
+  wins.forEach(w => fitAndClamp(w));
+  tileWindows();
+});
 
-// ===== Resize pelas handles (br & bl) =====
+// ===== Resize apenas no canto inferior direito (br) =====
 (function setupResize(){
-  const minW = 320, minH = 200;
+  const minW = 320, minH = 220;
   let resizing = null;
   function onDown(e){
-    const h = e.target.closest('.resize-handle');
+    const h = e.target.closest('.resize-handle.br');
     if (!h) return;
+    e.preventDefault(); e.stopPropagation();
     const win = h.closest('.win');
-    const mode = h.dataset.resize;
     const r = win.getBoundingClientRect();
-    resizing = { win, mode, sx:e.clientX, sy:e.clientY, startW:r.width, startH:r.height, startL:r.left, startTop:r.top };
-    e.preventDefault();
-    document.body.classList.add('is-dragging');
+    resizing = { win, sx:e.clientX, sy:e.clientY, startW:r.width, startH:r.height };
+    document.body.classList.add('is-resizing');
     bringToFront(win);
   }
   function onMove(e){
     if (!resizing) return;
+    e.preventDefault();
     const sb = getSafeBounds();
-    const { win, mode, sx, sy, startW, startH, startL, startTop } = resizing;
-    let newW = startW + (mode==='br' ? (e.clientX - sx) : -(e.clientX - sx));
+    const { win, sx, sy, startW, startH } = resizing;
+    let newW = startW + (e.clientX - sx);
     let newH = startH + (e.clientY - sy);
     newW = Math.max(minW, newW);
     newH = Math.max(minH, newH);
-    const left = parseInt(getComputedStyle(win).left) || startL;
-    const top  = parseInt(getComputedStyle(win).top) || startTop;
+    const left = parseInt(getComputedStyle(win).left) || 0;
+    const top  = parseInt(getComputedStyle(win).top) || 0;
     newW = Math.min(newW, sb.maxX - left);
     newH = Math.min(newH, sb.maxY - top);
     win.style.width  = newW + 'px';
     win.style.height = newH + 'px';
-    if (mode === 'bl'){
-      const dx = (newW - startW);
-      const nx = clamp(startL - dx, sb.minX, sb.maxX - newW);
-      win.style.left = nx + 'px';
-    }
+    win.style.maxHeight = (sb.maxY - top - 8) + 'px';
+    window.getSelection()?.removeAllRanges?.();
   }
-  function onUp(){ resizing=null; document.body.classList.remove('is-dragging'); }
-  document.addEventListener('mousedown', onDown);
-  window.addEventListener('mousemove', onMove);
-  window.addEventListener('mouseup', onUp);
+  function onUp(){ resizing=null; document.body.classList.remove('is-resizing'); }
+  document.addEventListener('mousedown', onDown, { passive:false });
+  window.addEventListener('mousemove', onMove, { passive:false });
+  window.addEventListener('mouseup', onUp, { passive:false });
 })();
 
-// ===== PLAYER =====
-const audio = new Audio('https://radio.plaza.one/mp3');
+// ===== PLAYER via playlist.txt =====
+const PLAYLIST_TXT = 'playlist.txt';
+const audio = new Audio();
 audio.crossOrigin = 'anonymous';
-audio.preload = 'none';
+audio.preload = 'metadata';
 audio.loop = false;
+
 const player = document.getElementById('player');
 const btnPlay = document.getElementById('btnPlay');
 const btnPause = document.getElementById('btnPause');
 const btnStop = document.getElementById('btnStop');
+const btnPrev = document.getElementById('btnPrev');
+const btnNext = document.getElementById('btnNext');
 const btnMute = document.getElementById('btnMute');
+const seek = document.getElementById('seek');
+const curTimeEl = document.getElementById('curTime');
+const durTimeEl = document.getElementById('durTime');
+
 const bars = ['b1','b2','b3','b4','b5'].map(id => document.getElementById(id));
 const winPlayer = document.getElementById('win-player');
 winPlayer.style.setProperty('--tint', 'transparent');
@@ -307,107 +442,131 @@ winPlayer.style.setProperty('--tint', 'transparent');
 // NOW PLAYING (barra superior)
 const npEl = document.getElementById('nowPlaying');
 const npText = document.getElementById('npText');
-if (npEl){
-  npEl.addEventListener('click', (e) => {
-    if (e.target && e.target.closest && e.target.closest('#npLink')) return;
-    const btn = document.getElementById('tb-player');
-    if (btn) btn.click();
-  });
-}
-function updateNowPlaying(){
-  let title = '', artist = '';
-  if ('mediaSession' in navigator && navigator.mediaSession && navigator.mediaSession.metadata){
-    const md = navigator.mediaSession.metadata;
-    title  = md.title || '';
-    artist = md.artist || '';
-  }
-  const line = (artist || title) ? [artist, title].filter(Boolean).join(' — ') : 'Radio — Live';
-  if (npText) npText.textContent = line;
-  const track = document.getElementById('trackTitle');
-  if (track) track.textContent = line;
-  const playerNpLabel = document.getElementById('playerNpLabel');
-  const topLabel = document.getElementById('npLabel');
-  if (playerNpLabel && topLabel) playerNpLabel.textContent = topLabel.textContent;
-}
 function showNowPlaying(show){
   if (!npEl) return;
   if (show) npEl.removeAttribute('hidden'); else npEl.setAttribute('hidden','');
 }
-
-// Meta (Icecast/Shoutcast)
-const META_CFG = {
-  candidates: [
-    'https://radio.plaza.one/status-json.xsl',
-    'https://radio.plaza.one/status.xsl',
-    'https://radio.plaza.one/7?'
-  ],
-  intervalMs: 15000,
-  corsProxy: ''
-};
-function withProxy(u){ return META_CFG.corsProxy ? META_CFG.corsProxy + encodeURIComponent(u) : u; }
-async function fetchText(u){
-  const res = await fetch(withProxy(u), { mode:'cors', cache:'no-store' });
-  if (!res.ok) throw new Error('HTTP '+res.status);
-  return res.text();
+if (npEl){
+  npEl.addEventListener('click', () => {
+    const btn = document.getElementById('tb-player');
+    if (btn) btn.click();
+  });
 }
-function formatNP(artist, title){
-  if (artist && title) return `${artist} — ${title}`;
-  return artist || title || 'Radio — Live';
+function setPlayerNpLabel(){
+  const playerNpLabel = document.getElementById('playerNpLabel');
+  const topLabel = document.getElementById('npLabel');
+  if (playerNpLabel && topLabel) playerNpLabel.textContent = topLabel.textContent;
 }
-async function fetchIcecastJSON(u){
+function setTrackText(line){
+  const el = document.getElementById('trackTitle');
+  if (el) el.textContent = line;
+}
+function inferArtistTitleFromURL(u){
   try{
-    const txt = await fetchText(u);
-    const json = JSON.parse(txt);
-    const src = Array.isArray(json?.icestats?.source) ? json.icestats.source[0] : json?.icestats?.source;
-    if (src){
-      const artist = src.artist || '';
-      const title  = src.title || src.server_name || '';
-      return { artist, title, text: formatNP(artist, title) };
+    const last = decodeURIComponent(new URL(u).pathname.split('/').pop() || '');
+    const base = last.replace(/\.(mp3|ogg|m4a|wav)$/i,'').replace(/[_]+/g,' ').trim();
+    const parts = base.split(/\s[-—]\s/);
+    if (parts.length >= 2){
+      const artist = parts.shift().trim();
+      const title  = parts.join(' - ').trim();
+      return { artist, title, text: `${artist} — ${title}` };
     }
-  }catch(e){}
-  return null;
-}
-async function fetchShoutcast7(u){
-  try{
-    const txt = (await fetchText(u)).trim();
-    const line = txt.split('\n').pop() || '';
-    const parts = line.split(',');
-    const last = parts[parts.length-1] || '';
-    if (last){
-      const split = last.split(' - ');
-      if (split.length >= 2){
-        const artist = split.shift().trim();
-        const title = split.join(' - ').trim();
-        return { artist, title, text: formatNP(artist, title) };
-      }
-      return { text: last.trim() };
-    }
-  }catch(e){}
-  return null;
-}
-async function pollNowPlaying(){
-  for (const c of META_CFG.candidates){
-    let np = null;
-    if (c.endsWith('/7?')) np = await fetchShoutcast7(c);
-    else if (c.includes('status-json.xsl')) np = await fetchIcecastJSON(c);
-    if (np && (np.artist || np.title || np.text)){
-      const line = np.text || formatNP(np.artist, np.title);
-      if (npText) npText.textContent = line;
-      const track = document.getElementById('trackTitle');
-      if (track) track.textContent = line;
-      return;
-    }
-  }
-  if ('mediaSession' in navigator && navigator.mediaSession && navigator.mediaSession.metadata){
-    const md = navigator.mediaSession.metadata;
-    const text = formatNP(md.artist, md.title);
-    if (npText) npText.textContent = text;
-    const track = document.getElementById('trackTitle');
-    if (track) track.textContent = text;
+    return { artist:'', title:base, text: base };
+  }catch(_){
+    return { artist:'', title:'Audio', text:'Audio' };
   }
 }
+function updateNowPlayingFromURL(u){
+  const meta = inferArtistTitleFromURL(u);
+  if (npText) npText.textContent = meta.text;
+  setTrackText(meta.text);
+  setPlayerNpLabel();
+  if ('mediaSession' in navigator && navigator.mediaSession){
+    navigator.mediaSession.metadata = new MediaMetadata({ title: meta.title || meta.text, artist: meta.artist || 'algarismx', album: 'algarismx', artwork: [] });
+  }
+  showNowPlaying(true);
+}
 
-// Web Audio + Visualizer
+// Playlist handling
+let playlist = [];
+let playIdx = 0;
+
+function shuffleArray(arr){ for (let i = arr.length - 1; i > 0; i--){ const j = Math.floor(Math.random() * (i + 1)); [arr[i], arr[j]] = [arr[j], arr[i]]; } return arr; }
+async function loadPlaylistTxt(){
+  const res = await fetch(PLAYLIST_TXT, { cache:'no-store' });
+  if (!res.ok) throw new Error('playlist.txt not found');
+  const txt = await res.text();
+  const lines = txt.split(/\r?\n/).map(s=>s.trim()).filter(s => s && !s.startsWith('#'));
+  playlist = shuffleArray(lines);
+  playIdx = 0;
+}
+async function startPlaylist(){
+  try{
+    await loadPlaylistTxt();
+    if (!playlist.length) throw new Error('empty playlist');
+    await playCurrent();
+  }catch(e){
+    console.error('Playlist error:', e);
+    alert('Não foi possível carregar a playlist.\nConfirma o ficheiro playlist.txt na raiz (um link por linha).');
+  }
+}
+async function playCurrent(){
+  const url = playlist[playIdx % playlist.length];
+  audio.src = url;
+  ensureAudioGraph();
+  if (ctx && ctx.state === 'suspended') await ctx.resume();
+  try{
+    await audio.play();
+    setPlaying(true);
+    updateNowPlayingFromURL(url);
+  }catch(err){
+    console.warn('play failed', err);
+  }
+}
+function nextTrack(){
+  if (!playlist.length) return;
+  playIdx = (playIdx + 1) % playlist.length;
+  playCurrent();
+}
+function prevTrack(){
+  if (!playlist.length) return;
+  if (audio.currentTime > 5){
+    audio.currentTime = 0;
+    return;
+  }
+  playIdx = (playIdx - 1 + playlist.length) % playlist.length;
+  playCurrent();
+}
+audio.addEventListener('ended', nextTrack);
+audio.addEventListener('play', ()=> showNowPlaying(true));
+audio.addEventListener('pause', ()=> showNowPlaying(false));
+
+// Time / seek
+function fmtTime(sec){
+  if (!isFinite(sec)) return '0:00';
+  const s = Math.floor(sec % 60).toString().padStart(2,'0');
+  const m = Math.floor(sec / 60);
+  return `${m}:${s}`;
+}
+audio.addEventListener('loadedmetadata', ()=>{
+  durTimeEl.textContent = fmtTime(audio.duration);
+  const mx = isFinite(audio.duration) && audio.duration > 0 ? Math.floor(audio.duration*1000) : 1000;
+  seek.max = Math.max(1, mx);
+});
+audio.addEventListener('timeupdate', ()=>{
+  curTimeEl.textContent = fmtTime(audio.currentTime);
+  if (isFinite(audio.duration) && audio.duration > 0){
+    seek.value = String(Math.floor((audio.currentTime / audio.duration) * seek.max));
+  }
+});
+seek.addEventListener('input', ()=>{
+  if (isFinite(audio.duration) && audio.duration > 0){
+    const frac = Number(seek.value) / Number(seek.max);
+    audio.currentTime = frac * audio.duration;
+  }
+});
+
+// Web Audio + Visualizer (VU) + Waves analyser
 let ctx = null, src = null, analyser = null, data = null;
 let vuRAF = 0;
 function ensureAudioGraph() {
@@ -416,97 +575,83 @@ function ensureAudioGraph() {
   ctx = new AC();
   src = ctx.createMediaElementSource(audio);
   analyser = ctx.createAnalyser();
-  analyser.fftSize = 256;            // mais responsivo
+  analyser.fftSize = 256;
   data = new Uint8Array(analyser.frequencyBinCount);
   src.connect(analyser);
   analyser.connect(ctx.destination);
   window.appAnalyser = analyser;
-  if (window.WavesController && window.WavesController.attachAnalyser) {
-    window.WavesController.attachAnalyser(analyser);
+  if (window.WavesController && window.WavesController.attachAnalyser) window.WavesController.attachAnalyser(analyser);
+  function vu(){
+    if (!analyser) return;
+    analyser.getByteFrequencyData(data);
+    let avg = 0; for (let i=0;i<data.length;i++) avg += data[i]; avg/=data.length;
+    const level = Math.min(1, avg/255);
+    bars.forEach((b,i)=>{ if(b) b.style.setProperty('--l', String(level * (0.6 + 0.4*i/4))); });
+    vuRAF = requestAnimationFrame(vu);
   }
+  vu();
 }
-function vuLoop(){
-  if (!analyser) return;
-  analyser.getByteFrequencyData(data);
-  const bands = [0, 2, 6, 12, 24, data.length-1];
-  for (let i=0;i<5;i++){
-    let s=0,c=0;
-    for (let j=bands[i]; j<bands[i+1]; j++){ s+=data[j]; c++; }
-    const v = c? (s/c)/255 : 0;
-    const el = document.getElementById(['b1','b2','b3','b4','b5'][i]);
-    if (el) el.style.setProperty('--l', String(v.toFixed(3)));
-  }
-  vuRAF = requestAnimationFrame(vuLoop);
-}
-function setPlaying(p) { 
-  player.classList.toggle('playing', p); 
-  if (p){ if (!vuRAF) vuLoop(); }
-  else { if (vuRAF) cancelAnimationFrame(vuRAF); vuRAF=0; }
-}
+function setPlaying(p) { player.classList.toggle('playing', p); }
 
 // Controlo do leitor
-btnPlay.addEventListener('click', async () => {
-  try {
-    ensureAudioGraph();
-    if (ctx.state === 'suspended') await ctx.resume();
-    await audio.play();
-    setPlaying(true);
-    showNowPlaying(true);
-    updateNowPlaying();
-    clearInterval(window.__np_timer);
-    window.__np_timer = setInterval(pollNowPlaying, META_CFG.intervalMs);
-    pollNowPlaying();
-  } catch (e) { console.warn(e); }
+const btnPlayEl  = document.getElementById('btnPlay');
+const btnPauseEl = document.getElementById('btnPause');
+const btnStopEl  = document.getElementById('btnStop');
+btnPlayEl?.addEventListener('click', async () => {
+  if (audio.src) {
+    try { await audio.play(); setPlaying(true); } catch(_) {}
+  } else {
+    startPlaylist();
+  }
 });
-btnPause.addEventListener('click', () => { audio.pause(); setPlaying(false); /* mantém texto */ });
-btnStop.addEventListener('click', () => {
-  audio.pause();
-  audio.currentTime = 0;
-  setPlaying(false);
+btnPauseEl?.addEventListener('click', () => { audio.pause(); setPlaying(false); });
+btnStopEl?.addEventListener('click', () => { 
+  audio.pause(); 
+  audio.currentTime = 0; 
+  setPlaying(false); 
+  showNowPlaying(false);
+});
+btnPrev?.addEventListener('click', prevTrack);
+btnNext?.addEventListener('click', nextTrack);
+btnMute?.addEventListener('click', () => {
+  audio.muted = !audio.muted;
+  btnMute.classList.toggle('speaker-on', !audio.muted);
+  btnMute.classList.toggle('speaker-off', audio.muted);
+  btnMute.textContent = audio.muted ? '🔈' : '🔊';
 });
 
-if (btnMute){
-  btnMute.addEventListener('click', ()=>{
-    audio.muted = !audio.muted;
-    if (audio.muted){
-      btnMute.textContent = '🔇';
-      btnMute.classList.remove('speaker-on');
-      btnMute.classList.add('speaker-off');
-    } else {
-      btnMute.textContent = '🔊';
-      btnMute.classList.remove('speaker-off');
-      btnMute.classList.add('speaker-on');
-    }
-  });
+// Media Session actions
+if ('mediaSession' in navigator){
+  try{
+    navigator.mediaSession.setActionHandler('play', ()=>btnPlayEl?.click());
+    navigator.mediaSession.setActionHandler('pause', ()=>btnPauseEl?.click());
+    navigator.mediaSession.setActionHandler('stop', ()=>btnStopEl?.click());
+    navigator.mediaSession.setActionHandler('previoustrack', ()=>btnPrev?.click());
+    navigator.mediaSession.setActionHandler('nexttrack', ()=>btnNext?.click());
+    navigator.mediaSession.setActionHandler('seekto', (d)=>{
+      if (d.seekTime != null) audio.currentTime = d.seekTime;
+    });
+  }catch(_){}
 }
 
-// Sem fader de volume: volume a 100% por defeito
-audio.volume = 1;
-
-// Clock
-(function clockTick(){
+// Clock simples
+(function clock(){
   const el = document.getElementById('taskClock');
-  if (el){
-    const d = new Date();
-    const hh = String(d.getHours()).padStart(2,'0');
-    const mm = String(d.getMinutes()).padStart(2,'0');
-    el.textContent = `${hh}:${mm}`;
-  }
-  setTimeout(clockTick, 15000);
+  function tick(){ if(!el) return; const d=new Date(); const s=d.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}); el.textContent=s; }
+  tick(); setInterval(tick, 10000);
 })();
 
-// ===== TOP HAMBURGER (tabs colapsadas) =====
-const tbMenuTop = document.getElementById('tb-menu-top');
-const mobileMenu = document.getElementById('mobileMenu');
-if (tbMenuTop && mobileMenu){
-  tbMenuTop.addEventListener('click', ()=>{
-    const open = mobileMenu.getAttribute('aria-hidden') === 'false';
-    mobileMenu.setAttribute('aria-hidden', open ? 'true' : 'false');
-    tbMenuTop.setAttribute('aria-expanded', open ? 'false' : 'true');
+// Atalhos de teclado
+(function kbd(){
+  document.addEventListener('keydown', (e)=>{
+    if (e.code === 'Space'){ e.preventDefault(); if (audio.paused) btnPlayEl?.click(); else btnPauseEl?.click(); }
+    const meta = e.metaKey || e.ctrlKey;
+    if (meta && e.key === 'ArrowLeft'){ e.preventDefault(); document.getElementById('btnPrev')?.click(); }
+    if (meta && e.key === 'ArrowRight'){ e.preventDefault(); document.getElementById('btnNext')?.click(); }
+    if (e.key.toLowerCase() === 'm'){ const t=document.getElementById('tb-menu-top'); if (t) t.click(); }
+    if (e.key === 'Escape'){ const act=document.querySelector('.win.active .ctl[data-close]'); act?.dispatchEvent(new Event('click')); }
   });
-}
+})();
 
-// ===== WAVES on load =====
-window.addEventListener('load', () => {
-  wavesMountForTheme();
-});
+// Montar waves no arranque inicial
+wavesMountForTheme();

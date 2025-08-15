@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="theme-color" content="#0a0a0a" />
-  <title>Ricardo Gonçalves Melgar — algarismx</title>
+  <title>algarismx - portfolio</title>
   <meta name="description" content="Portfolio of Ricardo Gonçalves Melgar (algarismx) — Sound Designer, Sound Technician and Music Producer in Faro, Portugal.">
   <link rel="stylesheet" href="styles.css" />
 </head>
@@ -43,9 +43,7 @@
 
     <div id="nowPlaying" class="now-playing" aria-live="polite" hidden>
       <strong id="npLabel" class="np-label">Now playing:</strong>
-      <a id="npLink" class="np-link" href="https://plaza.one/" target="_blank" rel="noopener">
-        <span id="npText">—</span>
-      </a>
+      <span id="npText">—</span>
     </div>
   </div>
 
@@ -61,8 +59,8 @@
 
   <!-- Desktop / Janelas -->
   <div class="desktop" id="desktop">
-    <!-- Player window -->
-    <div class="win hidden" id="win-player" style="top:14vh;left:8vw;width:min(520px,92vw);">
+    <!-- Player window (compacto) -->
+    <div class="win hidden" id="win-player" style="top:14vh;left:8vw;">
       <div class="titlebar" data-drag>
         <span class="title" id="title-player" data-i18n="titlePlayer">Leitor</span>
         <div class="window-controls">
@@ -72,23 +70,39 @@
       </div>
       <div class="content">
         <div class="player" id="player">
-          <div class="row">
-            <button class="btn-rect icon" id="btnPlay" data-i18n="btnPlay" title="Play/Pause" aria-label="Play/Pause">▶</button>
-            <button class="btn-rect icon" id="btnPause" data-i18n="btnPause" title="Pause" aria-label="Pause">❚❚</button>
-            <button class="btn-rect icon" id="btnStop" data-i18n="btnStop" title="Stop" aria-label="Stop">■</button>
-            <div class="vu" aria-hidden="true">
-              <div class="bar" id="b1"></div><div class="bar" id="b2"></div><div class="bar" id="b3"></div><div class="bar" id="b4"></div><div class="bar" id="b5"></div>
-            </div>
+          <!-- Seek (linha do tempo) -->
+          <div class="row seek">
+            <input id="seek" class="seekbar" type="range" min="0" max="1000" value="0" step="1" aria-label="Seek">
           </div>
-          <div class="row">
+          <!-- Tempo atual (esq) e duração (dir) na mesma linha -->
+          <div class="row time-line">
+            <span id="curTime" class="time">0:00</span>
+            <span class="spacer"></span>
+            <span id="durTime" class="time">0:00</span>
+          </div>
+          <!-- Now playing do leitor -->
+          <div class="row np-line">
             <strong id="playerNpLabel" class="np-label">Now playing:</strong>
             <span class="track" id="trackTitle">—</span>
             <button class="btn-rect icon speaker speaker-on" id="btnMute" title="Mute / Unmute" aria-label="Mute / Unmute">🔊</button>
           </div>
+          <!-- Controlo + VU -->
+          <div class="row controls">
+            <div class="ctrls">
+              <button class="btn-rect icon" id="btnPrev" title="Back" aria-label="Back">⏮</button>
+              <button class="btn-rect icon" id="btnPlay" data-i18n="btnPlay" title="Play" aria-label="Play">▶</button>
+              <button class="btn-rect icon" id="btnPause" data-i18n="btnPause" title="Pause" aria-label="Pause">❚❚</button>
+              <button class="btn-rect icon" id="btnStop" data-i18n="btnStop" title="Stop" aria-label="Stop">■</button>
+              <button class="btn-rect icon" id="btnNext" title="Forward" aria-label="Forward">⏭</button>
+            </div>
+            <div class="vu" aria-hidden="true">
+              <div class="bar" id="b1"></div><div class="bar" id="b2"></div><div class="bar" id="b3"></div><div class="bar" id="b4"></div><div class="bar" id="b5"></div>
+            </div>
+          </div>
         </div>
       </div>
+      <!-- Apenas canto inferior direito -->
       <div class="resize-handle br" data-resize="br" aria-hidden="true"></div>
-      <div class="resize-handle bl" data-resize="bl" aria-hidden="true"></div>
     </div>
 
     <!-- Portfolio -->
@@ -108,7 +122,6 @@
         </div>
       </div>
       <div class="resize-handle br" data-resize="br"></div>
-      <div class="resize-handle bl" data-resize="bl"></div>
     </div>
 
     <!-- ETIC -->
@@ -121,22 +134,9 @@
         </div>
       </div>
       <div class="content">
-        <div class="list" id="eticList">
-          <div class="item"><strong>ETIC Algarve — 2020–2023</strong><br><span class="muted">Projects in music production, foley, sound design and recording for video/games.</span></div>
-          <div class="item">Podcast — “J Dilla…”</div>
-          <div class="item">Mestre da Vida (short film)</div>
-          <div class="item">Foley — Cinema/Video</div>
-          <div class="item">Project “Lábia — Human Trafficking”</div>
-          <div class="item">Videogame Music Production</div>
-          <div class="item">Mastering</div>
-          <div class="item">Podcast — “Genesis of Sound”</div>
-          <div class="item">“Bankruptcy”</div>
-          <div class="item">LiveInsight Performance</div>
-          <div class="item">Erasmus+ — “Sampling Prague”</div>
-        </div>
+        <div class="list" id="eticList"></div>
       </div>
       <div class="resize-handle br" data-resize="br"></div>
-      <div class="resize-handle bl" data-resize="bl"></div>
     </div>
 
     <!-- Professional -->
@@ -149,18 +149,13 @@
         </div>
       </div>
       <div class="content">
-        <div class="list" id="proList">
-          <div class="item"><strong>ETIC Algarve — Diploma Delivery (2024)</strong><br><span class="muted">Continuous composition per course + specific SFX.</span></div>
-          <div class="item"><strong>Internal technical support</strong><br><span class="muted">Recordings with students and teachers; equipment maintenance and management.</span></div>
-          <div class="item"><strong>Short films and documentaries</strong><br><span class="muted">Sound direction, timecode sync and multi‑monitoring.</span></div>
-        </div>
+        <div class="list" id="proList"></div>
       </div>
       <div class="resize-handle br" data-resize="br"></div>
-      <div class="resize-handle bl" data-resize="bl"></div>
     </div>
 
     <!-- About -->
-    <div class="win hidden" id="win-about" style="top:18vh;left:52vw;width:min(760px,92vw);">
+    <div class="win hidden" id="win-about" style="top:18vh;left:52vw;">
       <div class="titlebar" data-drag>
         <div class="left"><span class="title" id="title-about" data-i18n="titleAbout">About</span></div>
         <div class="window-controls">
@@ -171,24 +166,14 @@
       <div class="content">
         <div class="about-layout">
           <img class="about-photo" src="000002222.jpg" alt="Portrait of Ricardo Gonçalves Melgar" loading="lazy" />
-          <div class="about-copy" id="aboutCopy">
-            <p>Hi! My name is Ricardo a.k.a downware and I'm 24 years old.</p>
-            <p>I am a music producer, sound designer and sound technician with a love for sampling and audio manipulation.</p>
-            <p>Since I was a kid, I have been interested in music, with my main influences being 80s and 90s Pop, Hip-Hop, and R&amp;B.</p>
-            <p>Currently, I produce Jungle, Drum&amp;Bass, Vaporwave, and Hip-Hop.</p>
-            <p>I primarily work with Ableton Live but also have experience working with Pro Tools.</p>
-            <p>I have a background in programming, but producing music has been a hobby of mine since I was 16. This hobby led me to pursue a course in Music Creation and Production Techniques at ETIC_Algarve in Faro, which turned me into a professional in the field of sound and music.</p>
-            <p>Towards the end of my course, I had an internship at the studio of music producer and DJ, Sickonce (Rafael Correia), in Portimão. During the internship, I had the opportunity to participate in various recording, editing, and post-production sessions for different artists.</p>
-            <p>I was fortunate to receive an Erasmus+ scholarship from ETIC_Algarve, which allowed me to intern for three months at Soundsgate, a company in Prague, Czech Republic. Among various projects, I highlight my role as a sound technician and assistant at the Composers Summit 2023 event.</p>
-          </div>
+          <div class="about-copy" id="aboutCopy"><!-- texto injetado via app.js --></div>
         </div>
       </div>
       <div class="resize-handle br" data-resize="br"></div>
-      <div class="resize-handle bl" data-resize="bl"></div>
     </div>
 
-    <!-- Contact -->
-    <div class="win hidden" id="win-contact" style="top:44vh;left:12vw;width:min(540px,92vw);">
+    <!-- Contact (mínimo) -->
+    <div class="win hidden" id="win-contact" style="top:44vh;left:12vw;width:min(420px,92vw);">
       <div class="titlebar" data-drag>
         <div class="left"><span class="title" id="title-contact" data-i18n="titleContact">Contact</span></div>
         <div class="window-controls">
@@ -197,20 +182,19 @@
         </div>
       </div>
       <div class="content">
-        <ul>
-          <li>Email: <a href="mailto:ricardo@algarismx.pt">ricardo@algarismx.pt</a></li>
-          <li>LinkedIn: <a href="https://linkedin.com/in/algarismx" target="_blank" rel="noopener noreferrer">algarismx</a></li>
-          <li>Instagram: <a href="https://instagram.com/algarismx" target="_blank" rel="noopener noreferrer">@algarismx</a></li>
+        <ul style="margin:0; padding-left:18px;">
+          <li><a href="mailto:ricardo@algarismx.pt">ricardo@algarismx.pt</a></li>
+          <li><a href="https://linkedin.com/in/algarismx" target="_blank" rel="noopener noreferrer">LinkedIn</a></li>
+          <li><a href="https://instagram.com/algarismx" target="_blank" rel="noopener noreferrer">Instagram</a></li>
         </ul>
       </div>
       <div class="resize-handle br" data-resize="br"></div>
-      <div class="resize-handle bl" data-resize="bl"></div>
     </div>
   </div>
 
   <!-- BARRA INFERIOR -->
   <div class="taskbar taskbar-bottom" role="toolbar">
-    <div id="kbdHints" class="kbd-hints" aria-hidden="true">Space — Play/Pause · M — Menu · Esc — Close</div>
+    <div id="kbdHints" class="kbd-hints" aria-hidden="true">Space — Play/Pause · ⌘/Ctrl+←/→ — Back/Forward · M — Menu · Esc — Close</div>
     <div class="spacer"></div>
     <div class="task-controls">
       <select class="theme-select" id="themeSelect" aria-label="Tema">

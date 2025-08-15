@@ -48,8 +48,7 @@
 
       const bounding={width:0,height:0,left:0,top:0};
       const noise=new Noise(Math.random());
-      let lines=[], frameId=null;
-      const mouse={ x:-10,y:0,lx:0,ly:0,sx:0,sy:0, v:0,vs:0,a:0,set:false };
+      let lines=[], frameId=null, paused=false;
 
       function setSize(){ const r=container.getBoundingClientRect(); bounding.width=r.width; bounding.height=r.height; canvas.width=r.width; canvas.height=r.height; }
       function setLines(){
@@ -63,14 +62,13 @@
         for(let i=0;i<=totalLines;i++){
           const pts=[];
           for(let j=0;j<=totalPoints;j++){
-            pts.push({ x:xStart+cfg.xGap*i, y:yStart+cfg.yGap*j, wave:{x:0,y:0}, cursor:{x:0,y:0,vx:0,vy:0} });
+            pts.push({ x:xStart+cfg.xGap*i, y:yStart+cfg.yGap*j, wave:{x:0,y:0} });
           }
           lines.push(pts);
         }
       }
 
-      // Audio
-      let analyser = null, freq = null;
+      let analyser = null, freq = null, audioLevel = 0;
       function updateAudioLevel(){
         if (!analyser) { audioLevel = 0; return; }
         analyser.getByteFrequencyData(freq);
@@ -79,6 +77,7 @@
       }
 
       function movePoints(time){
+        if (paused) return;
         updateAudioLevel();
         const ampX = cfg.waveAmpX * (1 + audioLevel * 0.9);
         const ampY = cfg.waveAmpY * (1 + audioLevel * 0.9);
@@ -102,11 +101,10 @@
       function drawLines(){
         const {width,height}=bounding;
         ctx.clearRect(0,0,width,height);
+        if (paused) return; // não desenha quando pausado
         ctx.beginPath();
-        const a = cfg.pixelate ? (0.35 + audioLevel*0.45) : (0.55 + audioLevel*0.35);
-        ctx.lineWidth = (cfg.pixelate?1.0:1.2) + audioLevel*(cfg.pixelate?0.8:1.2);
-        ctx.strokeStyle = cfg.lineColor.includes('#000') ? `rgba(0,0,0,${a})` : `rgba(255,255,255,${a})`;
-
+        ctx.lineWidth = (cfg.pixelate?1.0:1.2);
+        ctx.strokeStyle = cfg.lineColor;
         lines.forEach(points=>{
           let p1=moved(points[0]);
           ctx.moveTo(p1.x,p1.y);
@@ -115,14 +113,36 @@
         ctx.stroke();
       }
 
-      function tick(t){ movePoints(t); drawLines(); frameId=requestAnimationFrame(tick); }
+      function tick(t){ 
+        movePoints(t); 
+        drawLines(); 
+        frameId=requestAnimationFrame(tick); 
+      }
 
       function onResize(){ setSize(); setLines(); }
+      // Pausar/retomar consoante visibilidade da aba
+      function onVisibility(){
+        const hidden = document.hidden;
+        if (hidden){
+          paused = true;
+          if (frameId){ cancelAnimationFrame(frameId); frameId=null; }
+          // opcional: limpar canvas para reduzir burn-in
+          // ctx.clearRect(0,0,bounding.width,bounding.height);
+        } else {
+          paused = false;
+          if (!frameId) frameId = requestAnimationFrame(tick);
+        }
+      }
+
       setSize(); setLines(); frameId=requestAnimationFrame(tick);
       window.addEventListener('resize', onResize);
+      document.addEventListener('visibilitychange', onVisibility);
 
       this._state={
-        container, canvas, ctx, cfg, frameId, handlers:[onResize],
+        container, canvas, ctx, cfg, frameId, handlers:[
+          {t:'resize', fn:onResize},
+          {t:'visibilitychange', fn:onVisibility}
+        ],
         attach(an){
           analyser = an || null;
           freq = analyser ? new Uint8Array(analyser.frequencyBinCount) : null;
@@ -132,8 +152,14 @@
 
     unmount(){
       const s=this._state; if(!s) return;
-      window.removeEventListener('resize', s.handlers[0]);
-      cancelAnimationFrame(s.frameId);
+      // remover todos os handlers registados
+      if (Array.isArray(s.handlers)){
+        s.handlers.forEach(h=>{
+          if (h.t==='resize') window.removeEventListener('resize', h.fn);
+          else if (h.t==='visibilitychange') document.removeEventListener('visibilitychange', h.fn);
+        });
+      }
+      if (s.frameId) cancelAnimationFrame(s.frameId);
       s.container.remove();
       this._state=null;
     },
