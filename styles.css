@@ -1,12 +1,11 @@
 /* Base + Win98/ME theme (default) */
-
 :root{
   --bg:#008080;
   --ink:#000000;
   --muted:#2b2b2b;
   --maxw:1200px;
-  --bar-brass:#c08a3e; /* dynamic tint base */
-  --accent: hsl(28 95% 58%); /* minimal orange accent */
+  --bar-brass:#c08a3e;
+  --accent: hsl(28 95% 58%);
 
   /* Win98 palette */
   --win-face:#c0c0c0;
@@ -17,89 +16,109 @@
   --win-dark:#000000;
   --title-inactive:#808080;
   --title-active:#000080;
+
+  --topbar-h: 44px;
+  --bottombar-h: 48px;
 }
 
 *{box-sizing:border-box}
-html,body{margin:0;padding:0;background:var(--bg);color:var(--ink);font:14px/1.4 Tahoma,"Microsoft Sans Serif",system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;-webkit-text-size-adjust:100%}
+html,body{margin:0;padding:0;background:teal;color:var(--ink);font:14px/1.4 Tahoma,"Microsoft Sans Serif",system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;-webkit-text-size-adjust:100%}
 a{color:var(--ink);text-decoration:none}
 a:hover{opacity:.9}
-.titlebar{touch-action:none}
+titlebar, .titlebar{touch-action:none}
 *{-webkit-tap-highlight-color:transparent}
-.container{width:100%;max-width:var(--maxw);margin:0 auto;padding:0 20px}
+
+/* Disable text selection during drag/resize */
+body.is-dragging, body.is-resizing { user-select:none !important; }
 
 /* Desktop */
-.desktop{position:relative;min-height:100vh;overflow:hidden}
-.wallpaper{display:none}
-.scrim{display:none}
+.desktop{position:relative;min-height:100vh;overflow:hidden;padding-top:calc(var(--topbar-h) + 8px);padding-bottom:calc(var(--bottombar-h) + 8px)}
 
-/* Tema moderno - desktop transparente */
+/* wallpaper/scrim (sem imagem!) */
+.wallpaper{position:fixed; inset:0; z-index:-3; display:none; background:none}
+.scrim{position:fixed; inset:0; z-index:-2; display:none; background:none}
+
+/* Waves por cima do background (body), mas abaixo das janelas */
+.waves{ position:fixed; inset:0; z-index:5; pointer-events:none; }
+.waves-canvas{ width:100%; height:100%; display:block; }
+
+/* Tema moderno – sem wallpaper de foto, só gradientes escuros */
 body.theme-modern .desktop{background:transparent}
+body.theme-modern .wallpaper{display:block; background:
+  radial-gradient(70% 60% at 60% 35%, rgba(192,138,62,.10), transparent 62%),
+  radial-gradient(60% 50% at 20% 70%, rgba(125,179,155,.08), transparent 60%)}
+body.theme-modern .scrim{display:block; background:
+  linear-gradient(to bottom, rgba(10,10,10,.20), rgba(10,10,10,.88))}
 
-/* Taskbar (Win98 default) */
-.taskbar{position:fixed;left:0;right:0;bottom:0;height:32px;background:var(--win-face);border-top:1px solid var(--win-dark);box-shadow:inset 0 1px 0 var(--win-highlight), inset 0 -1px 0 var(--win-shadow);display:flex;align-items:center;gap:6px;padding:4px 6px}
+/* --- TASKBARS --- */
+.taskbar{
+  display:flex; align-items:center; gap:8px;
+  background:var(--win-face); color:var(--win-text);
+  border:1px solid var(--win-dark);
+  box-shadow:inset 0 1px 0 var(--win-highlight), inset 0 -1px 0 var(--win-shadow);
+  z-index:1200;
+}
 .taskbar .spacer{flex:1}
-.task-button{position:relative;padding:4px 10px;min-width:84px;height:24px;color:var(--win-text);cursor:pointer;background:var(--win-face);border:1px solid var(--win-dark);box-shadow:inset -1px -1px 0 var(--win-shadow), inset 1px 1px 0 var(--win-highlight);transition:none;border-radius:0;text-align:center;display:inline-flex;align-items:center;justify-content:center}
+
+.taskbar-top{
+  position:fixed; left:0; right:0; top:0; height:var(--topbar-h);
+  padding:6px 8px;
+}
+.taskbar-bottom{
+  position:fixed; left:0; right:0; bottom:0; height:var(--bottombar-h);
+  padding:6px 8px;
+}
+
+/* Botões de separador */
+.tabs{display:flex; align-items:center; gap:6px; overflow:auto hidden}
+.task-button{
+  position:relative; padding:4px 10px; min-width:84px; height:28px;
+  color:var(--win-text); cursor:pointer; background:var(--win-face);
+  border:1px solid var(--win-dark);
+  box-shadow:inset -1px -1px 0 var(--win-shadow), inset 1px 1px 0 var(--win-highlight);
+  border-radius:0; text-align:center; display:inline-flex; align-items:center; justify-content:center;
+}
 .task-button:hover{filter:brightness(1.02)}
 .task-button.pulsing-static{box-shadow:inset 1px 1px 0 var(--win-shadow), inset -1px -1px 0 var(--win-highlight)}
 .task-button{ --pulse:0; --hue:40; }
 .task-button.pulsing::before{content:""; position:absolute; left:0; right:0; bottom:-2px; height:2px; background:hsl(var(--hue,40) 80% 45% / .9); transform-origin:left center; transform:scaleX(var(--pulse,0));}
 
-/* Center hamburger icon in Win98/ME and Modern */
-#tb-menu{
-  display:inline-flex; align-items:center; justify-content:center;
-  font-weight:700; line-height:1; text-align:center;
-}
-body.theme-modern #tb-menu{
-  display:inline-flex; align-items:center; justify-content:center;
-}
+/* Hambúrguer TOP visível só quando tabs colapsam */
+#tb-menu-top{ display:none; font-weight:700; line-height:1; text-align:center; }
 
-/* Taskbar right area: theme select + clock */
+/* Taskbar bottom: controls */
 .task-controls{display:flex;align-items:center;gap:8px}
-.theme-select{height:22px;border:1px solid var(--win-dark);background:var(--win-face);box-shadow:inset -1px -1px 0 var(--win-shadow), inset 1px 1px 0 var(--win-highlight);font:12px Tahoma,"Microsoft Sans Serif";color:var(--win-text)}
-.task-clock{min-width:92px;text-align:center;border:1px solid var(--win-dark);background:var(--win-face);box-shadow:inset -1px -1px 0 var(--win-shadow), inset 1px 1px 0 var(--win-highlight);padding:2px 6px;height:24px;display:grid;place-items:center;font-variant-numeric:tabular-nums}
+.theme-select, .lang-select{
+  height:28px;border:1px solid var(--win-dark);background:var(--win-face);
+  box-shadow:inset -1px -1px 0 var(--win-shadow), inset 1px 1px 0 var(--win-highlight);
+  font:12px Tahoma,"Microsoft Sans Serif";color:var(--win-text); padding:0 8px;
+}
+.task-clock{min-width:92px;text-align:center;border:1px solid var(--win-dark);background:var(--win-face);box-shadow:inset 0 1px 0 var(--win-highlight), inset 0 -1px 0 var(--win-shadow);padding:2px 6px;height:28px;display:grid;place-items:center;font-variant-numeric:tabular-nums}
 
-/* Mobile menu - só visível em mobile */
+/* Mobile menu – base Win98 */
 .mobile-only{display:none}
 .mobile-menu{
-  position:fixed; left:8px; right:auto; bottom:64px;
-  background:#1a1a1a; color:#fff;
-  border:1px solid rgba(255,255,255,.18);
-  box-shadow:0 20px 60px rgba(0,0,0,.45);
-  border-radius:8px; padding:10px;
+  position:fixed; left:8px; top:calc(var(--topbar-h) + 10px); right:auto;
+  background:var(--win-face); color:var(--win-text);
+  border:1px solid var(--win-dark);
+  box-shadow:inset -1px -1px 0 var(--win-shadow), inset 1px 1px 0 var(--win-highlight);
+  border-radius:0; padding:10px;
   display:none; flex-direction:column; gap:6px;
-  min-width:220px; min-height:120px;
-  z-index:2000;
+  min-width:220px; min-height:120px; z-index:2000;
 }
 .mobile-menu[aria-hidden="false"]{display:flex !important}
-.mobile-menu.open{ display:flex !important }
-
-.menu-item{
-  color:#fff;
-  padding:10px; text-align:left;
-  border:1px solid rgba(255,255,255,.18);
-  background:#2a2a2a;
-  box-shadow:none; border-radius:6px;
-}
-.menu-item:active{ filter:brightness(1.1) }
-
-/* Waves background - só no tema moderno */
-.waves{display:none; position:fixed; inset:0; z-index:-3; background-color:transparent; pointer-events:none}
-.waves-canvas{width:100%; height:100%; display:block}
-/* Dither background – only for Windows 98/ME theme */
-.dither{display:block; position:fixed; inset:0; z-index:-3; pointer-events:none}
-body.theme-modern .dither{display:none !important}
-body.theme-modern .waves{display:block !important}
-body.theme-modern .wallpaper{display:none !important}
-body.theme-modern .scrim{display:none !important}
-/* Garantir que o fundo seja transparente para as Waves */
-body.theme-modern{background:transparent !important}
-body.theme-modern html{background:transparent !important}
-body.theme-modern .desktop{background:transparent !important}
-/* Remover fundo azul do Windows ME no tema moderno */
-body.theme-modern{--bg:transparent !important}
+.menu-item{ color:var(--win-text); padding:8px 10px; text-align:left; border:1px solid var(--win-dark); background:var(--win-face); box-shadow:inset -1px -1px 0 var(--win-shadow), inset 1px 1px 0 var(--win-highlight); border-radius:0;}
+.menu-item:active{ filter:brightness(1.02) }
 
 /* Windows (Win98 default) */
-.win{ --tint: var(--bar-brass); position:absolute;top:14vh;left:8vw;width:min(720px,90vw);max-width:90vw;max-height:72vh;display:flex;flex-direction:column;background:var(--win-face);border:1px solid var(--win-dark);box-shadow:inset -1px -1px 0 var(--win-shadow), inset 1px 1px 0 var(--win-highlight);border-radius:0 }
+.win{
+  --tint: var(--bar-brass);
+  position:absolute; top:14vh; left:8vw; width:min(720px,90vw); max-width:90vw; max-height:72vh;
+  display:flex; flex-direction:column; background:var(--win-face);
+  border:1px solid var(--win-dark);
+  box-shadow:inset -1px -1px 0 var(--win-shadow), inset 1px 1px 0 var(--win-highlight);
+  border-radius:0
+}
 .win.hidden{display:none; --tint: transparent !important}
 .titlebar{cursor:move;user-select:none;display:flex;align-items:center;justify-content:space-between;gap:8px;padding:4px 6px;height:24px;color:#fff;background: linear-gradient(180deg, var(--title-inactive), color-mix(in srgb, var(--title-inactive) 70%, #000 30%));box-shadow: inset -1px -1px 0 rgba(0,0,0,.35), inset 1px 1px 0 rgba(255,255,255,.25)}
 .win.active .titlebar{background: linear-gradient(180deg, color-mix(in srgb, var(--tint) 70%, var(--title-active) 30%), color-mix(in srgb, var(--tint) 40%, var(--title-active) 60%))}
@@ -112,6 +131,18 @@ body.theme-modern{--bg:transparent !important}
 .content{padding:8px 10px;overflow:auto}
 .content p{color:var(--win-text)}
 .muted{color:var(--win-inactive-text)}
+
+/* Resize handles */
+.resize-handle{ position:absolute; width:14px; height:14px; bottom:2px; background:transparent; }
+.resize-handle.br{ right:2px; cursor:nwse-resize; }
+.resize-handle.bl{ left:2px; cursor:nesw-resize; }
+.resize-handle::after{
+  content:""; position:absolute; right:2px; bottom:2px; width:10px; height:10px; 
+  border-right:2px solid rgba(0,0,0,.5); border-bottom:2px solid rgba(0,0,0,.5);
+}
+.resize-handle.bl::after{
+  right:auto; left:2px; border-right:none; border-left:2px solid rgba(0,0,0,.5); border-bottom:2px solid rgba(0,0,0,.5);
+}
 
 /* Lists */
 .list{display:grid;gap:12px}
@@ -127,24 +158,70 @@ body.theme-modern{--bg:transparent !important}
 .spinner{width:64px;height:64px;border-radius:50%;border:3px solid rgba(255,255,255,.12);border-top-color:#fff;animation:spin 1s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
 
-/* Player */
-.player{display:grid;grid-template-columns:1fr auto;align-items:center;gap:12px;min-width:0}
-.player .row{display:flex;align-items:center;gap:8px;min-width:0;flex-wrap:wrap}
-.btn-rect{padding:4px 8px;border-radius:0;color:var(--win-text);cursor:pointer;background:var(--win-face);border:1px solid var(--win-dark);box-shadow: inset -1px -1px 0 var(--win-shadow), inset 1px 1px 0 var(--win-highlight)}
-.btn-rect:hover{filter:brightness(1.05)}
-.track{font-variant-numeric:tabular-nums;letter-spacing:.3px;opacity:.9;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:48ch}
-.vu{display:flex;gap:2px;align-items:end;height:12px}
-.bar{width:3px;height:4px;background:#9cff7a;opacity:.85;transition:height .08s linear}
-.player.playing .bar{height:calc(3px + 9px * var(--l,.5))}
-.vol{width:160px;max-width:50vw}
-
-/* Preloader language chooser styles */
+/* Loader — forçar look moderno, independentemente do tema */
 .preloader-inner{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:14px}
-.lang-chooser{margin-top:10px;background:rgba(20,20,20,.72);border:1px solid rgba(255,255,255,.16);border-radius:12px;padding:16px 18px;backdrop-filter:blur(8px);color:#fff;box-shadow:0 20px 60px rgba(0,0,0,.45)}
-body:not(.theme-modern) .lang-chooser{background:#f1f1f1;border-color:#999;color:#000}
+.lang-chooser{margin-top:10px;background:rgba(20,20,20,.72)!important;border:1px solid rgba(255,255,255,.16)!important;border-radius:12px!important;padding:16px 18px;backdrop-filter:blur(8px);color:#fff;box-shadow:0 20px 60px rgba(0,0,0,.45)}
 .lang-title{font-weight:600;margin-bottom:10px;text-align:center}
 .lang-buttons{display:flex;gap:10px;justify-content:center}
-.lang-buttons .btn-rect{min-width:120px}
+.lang-buttons .btn-rect{min-width:120px;border-radius:10px;border:1px solid rgba(255,255,255,.16);background:rgba(28,28,28,.6);color:#fff;box-shadow:none;padding:8px 14px}
+.lang-buttons .btn-rect:hover{filter:none;transform:translateY(-1px)}
+
+/* Player */
+.player{
+  display:flex;
+  flex-direction:column;
+  gap:12px;
+  min-width:0;
+}
+.player .row{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  min-width:0;
+  flex-wrap:wrap;
+}
+/* Controls row (first row) */
+.player > .row:first-child{
+  flex-wrap:nowrap;
+  gap:8px;
+}
+@media (max-width: 520px){
+  .player > .row:first-child{ flex-wrap:wrap; }
+}
+
+.btn-rect{padding:4px 8px;border-radius:0;color:var(--win-text);cursor:pointer;background:var(--win-face);border:1px solid var(--win-dark);box-shadow: inset -1px -1px 0 var(--win-shadow), inset 1px 1px 0 var(--win-highlight)}
+.btn-rect:hover{filter:brightness(1.05)}
+.btn-rect.icon{
+  width:36px; height:36px;
+  display:inline-flex; align-items:center; justify-content:center;
+  font-size:18px; line-height:1; padding:0; letter-spacing:0;
+}
+
+/* Now playing line inside player (no ellipsis; wraps) */
+.track{
+  font-variant-numeric:tabular-nums;
+  letter-spacing:.3px;
+  opacity:.95;
+  white-space:normal;
+  overflow:visible;
+  text-overflow:clip;
+  max-width:none;
+  flex:1 1 auto;
+  min-width:0;
+  word-break:break-word;
+}
+
+/* VU */
+.vu{ display:flex; gap:2px; align-items:flex-end; height:12px; flex:0 0 auto; }
+.bar{width:3px;height:4px;background:#9cff7a;opacity:.85;transition:height .08s linear}
+.player.playing .bar{height:calc(3px + 9px * var(--l,.5))}
+
+/* Speaker toggle states */
+.speaker{ min-width:36px }
+.speaker-on{ background:var(--win-face); color:#0b7f00; border-color:var(--win-dark); }
+.speaker-off{ background:var(--win-face); color:#b00000; border-color:var(--win-dark); }
+body.theme-modern .speaker-on{ background:rgba(28,28,28,.55); color:#7CFF7C; border:1px solid rgba(255,255,255,.16) }
+body.theme-modern .speaker-off{ background:rgba(28,28,28,.55); color:#FF7C7C; border:1px solid rgba(255,255,255,.16) }
 
 /* About layout */
 .about-layout{display:grid;grid-template-columns:240px 1fr;gap:16px;align-items:start}
@@ -156,142 +233,129 @@ body.theme-modern .about-photo{border:1px solid rgba(255,255,255,.18)}
   .about-photo{max-width:420px;justify-self:center;border-radius:12px}
 }
 
-/* Subtle keyboard hints */
-.kbd-hints{position:fixed; top:10px; right:12px; z-index:2500; font:11px/1.4 system-ui, -apple-system, Segoe UI, Roboto, Arial; color:rgba(255,255,255,.75); background:rgba(0,0,0,.25); padding:6px 8px; border-radius:8px; backdrop-filter:blur(6px); opacity:.6; pointer-events:none}
-body:not(.theme-modern) .kbd-hints{ color:#000; background:rgba(255,255,255,.65) }
-.kbd-hints:hover{opacity:.9}
-
-/* Reduced motion */
-@media (prefers-reduced-motion:reduce){
-  .task-button#tb-player::before{transition:none}
-  .bar{transition:none}
+/* Subtle keyboard hints for taskbar */
+.kbd-hints{
+  font:11px/1.2 system-ui, -apple-system, Segoe UI, Roboto, Arial;
+  color:var(--win-text);
+  opacity:.8;
+  padding:0 8px;
+  border:1px solid var(--win-dark);
+  background:var(--win-face);
+  box-shadow:inset -1px -1px 0 var(--win-shadow), inset 1px 1px 0 var(--win-highlight);
+  border-radius:0;
 }
 
-/* Modern theme overrides */
+body.theme-modern .kbd-hints{
+  color:#fff;
+  border:1px solid rgba(255,255,255,.16);
+  background:rgba(20,20,20,.45);
+  box-shadow:none;
+  border-radius:10px;
+}
+
+@media (max-width: 768px){
+  .kbd-hints{ display:none }
+}
+
+/* Modern theme overrides (glassy) */
 body.theme-modern{
-  --bg:transparent;
+  --bg:#0c0c0c;
   --ink:#ffffff;
   --muted:#e7e7e7;
+  --win-text:#ffffff; /* força texto branco no tema moderno */
 }
-body.theme-modern .wallpaper{position:fixed;inset:0;z-index:-2;background:url('000002222.jpg') center/cover no-repeat fixed;filter:brightness(.5) saturate(1.05) sepia(.18);display:block}
-body.theme-modern .scrim{position:fixed;inset:0;z-index:-1;display:block;background:
-  radial-gradient(70% 60% at 60% 35%, rgba(192,138,62,.10), transparent 62%),
-  radial-gradient(60% 50% at 20% 70%, rgba(125,179,155,.08), transparent 60%),
-  linear-gradient(to bottom, rgba(10,10,10,.08), rgba(10,10,10,.88));
+/* Taskbars glassy */
+body.theme-modern .taskbar{ border:1px solid rgba(255,255,255,.12); border-radius:12px; backdrop-filter:blur(10px); box-shadow:none; background:rgba(12,12,12,.55); color:#fff; }
+body.theme-modern .taskbar-top{ left:12px; right:12px; top:12px; height:48px; padding:8px 10px }
+body.theme-modern .taskbar-bottom{ left:12px; right:12px; bottom:12px; height:48px; padding:8px 10px }
+body.theme-modern .task-button{
+  gap:8px; padding:8px 12px; height:32px; border-radius:10px; border:1px solid rgba(255,255,255,.16);
+  background:rgba(20,20,20,.45); color:#fff; box-shadow:none; line-height:1;
 }
-
-/* Garantir que o fundo seja transparente para as Waves no tema moderno */
-body.theme-modern{background:transparent !important}
-body.theme-modern html{background:transparent !important}
-body.theme-modern .desktop{background:transparent}
-
-body.theme-modern .taskbar{left:12px;right:12px;bottom:12px;height:48px;border:1px solid rgba(255,255,255,.12);border-radius:12px;backdrop-filter:blur(10px);background:rgba(12,12,12,.55);box-shadow:none;padding:8px 10px;gap:10px}
-body.theme-modern .task-button{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:8px 12px;border-radius:10px;border:1px solid rgba(255,255,255,.16);background:rgba(20,20,20,.45);color:var(--ink);box-shadow:none;line-height:1;text-align:center}
 body.theme-modern .task-button:hover{transform:translateY(-1px)}
 body.theme-modern .task-button.pulsing::after{content:"";position:absolute;inset:-2px;border-radius:12px;border:1px solid rgba(255,255,255,.25);box-shadow:0 0 0 2px rgba(255,255,255,.06) inset}
-body.theme-modern .task-button{ --pulse:0; --hue:40; }
-/* In modern theme, player pulses entire button area */
-body.theme-modern #tb-player.pulsing::before{content:""; position:absolute; left:0; top:0; bottom:0; width:calc(var(--pulse,0) * 100%); border-radius:10px;background: linear-gradient(90deg, hsl(var(--hue) 90% 60% / .18), hsl(calc(var(--hue) + 60) 90% 60% / .35));transition: width .08s linear, background .2s ease; pointer-events:none}
-body.theme-modern .task-button.pulsing-static::before{ width:100%; background-size:200% 100%; animation: barSweep 2.6s ease-in-out infinite }
-/* Theme controls (modern) */
 body.theme-modern .task-controls{gap:10px}
-body.theme-modern .theme-select{height:32px; padding:0 10px; border-radius:10px; border:1px solid rgba(255,255,255,.16); background:rgba(20,20,20,.45); color:var(--ink); box-shadow:none; font:14px/1.2 system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial}
-body.theme-modern .task-clock{min-width:110px;height:32px;border:1px solid rgba(255,255,255,.16);border-radius:10px;background:rgba(20,20,20,.45);color:var(--ink);box-shadow:none}
+body.theme-modern .theme-select, body.theme-modern .lang-select{
+  height:32px; padding:0 10px; border-radius:10px; border:1px solid rgba(255,255,255,.16); background:rgba(20,20,20,.45); color:#fff; box-shadow:none; font:14px/1.2 system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial
+}
+body.theme-modern .task-clock{min-width:110px;height:32px;border:1px solid rgba(255,255,255,.16);border-radius:10px;background:rgba(20,20,20,.45);color:#fff;box-shadow:none}
 
-body.theme-modern .win{border:1px solid rgba(255,255,255,.18);border-radius:12px;background:rgba(18,18,18,.66);backdrop-filter:blur(14px) saturate(110%);box-shadow:0 30px 80px rgba(0,0,0,.45),inset 0 0 0 1px color-mix(in oklab, var(--tint), transparent 82%)}
-body.theme-modern .titlebar{gap:10px;padding:10px 12px;height:auto;border-bottom:1px solid color-mix(in oklab, var(--tint), transparent 55%);background:linear-gradient(180deg, color-mix(in oklab, var(--tint), transparent 78%), rgba(255,255,255,.03));border-top-left-radius:12px;border-top-right-radius:12px;transition:border-color .25s ease, background .25s ease}
-body.theme-modern .win.active .titlebar{border-bottom-color: color-mix(in oklab, var(--tint), white 12%);background:linear-gradient(180deg, color-mix(in oklab, var(--tint), transparent 65%), rgba(255,255,255,.06))}
-body.theme-modern .ctl{width:26px;height:22px;border-radius:8px;border:1px solid color-mix(in oklab, var(--tint), transparent 45%);background:rgba(30,30,30,.55);color:#fff;box-shadow:inset 0 0 0 1px color-mix(in oklab, var(--tint), transparent 82%);display:flex;align-items:center;justify-content:center;line-height:1}
-body.theme-modern .ctl:hover{background:rgba(35,35,35,.68)}
-body.theme-modern .content{padding:16px}
-body.theme-modern .content p{color:#fff}
-body.theme-modern .muted{color:var(--muted)}
-body.theme-modern .win::after{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;background:linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.02));mix-blend-mode:screen;opacity:.8}
-body.theme-modern .win::before{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;background:url('https://source.unsplash.com/random/1200x800/?synthwave,neon,80s') center/cover no-repeat;mix-blend-mode:difference;opacity:.55}
-body.theme-modern .btn-rect{padding:8px 10px;border-radius:6px;border:1px solid color-mix(in oklab, var(--tint), transparent 45%);background:rgba(25,25,25,.65);color:#fff;box-shadow:inset 0 0 0 1px color-mix(in oklab, var(--tint), transparent 82%);display:flex;align-items:center;justify-content:center}
-body.theme-modern .btn-rect:hover{background:rgba(35,35,35,.72)}
-
-/* Modern theme: mobile menu glass look + white text */
+/* Modern theme: mobile menu look (garantir override) */
 body.theme-modern .mobile-menu{ 
   background:rgba(20,20,20,.72); 
   border:1px solid rgba(255,255,255,.16); 
   border-radius:12px; 
   backdrop-filter:blur(10px) saturate(110%);
   box-shadow:0 20px 60px rgba(0,0,0,.45);
-  left:12px; right:auto; /* anchor to left like Start */
-  color:#fff;
+  left:12px; right:auto; color:#fff;
 }
 body.theme-modern .mobile-menu .menu-item{
-  border-radius:8px; 
-  border:1px solid rgba(255,255,255,.12); 
-  background:rgba(28,28,28,.55);
-  color:#fff;
+  border-radius:8px; border:1px solid rgba(255,255,255,.12); background:rgba(28,28,28,.55);
+  color:#fff; box-shadow:none;
 }
 body.theme-modern .mobile-menu .menu-item + .menu-item{ margin-top:6px }
 
-/* Responsive: Menu hambúrguer aparece quando não há espaço para todos os botões */
+/* Modern theme – windows glassy */
+body.theme-modern .win{
+  background:rgba(25,25,25,.5);
+  border:1px solid rgba(255,255,255,.18);
+  box-shadow:0 12px 40px rgba(0,0,0,.35);
+  border-radius:12px;
+  backdrop-filter:blur(10px) saturate(110%);
+}
+body.theme-modern .titlebar{
+  height:38px; padding:8px 10px;
+  background:linear-gradient(180deg, rgba(255,255,255,.18), rgba(255,255,255,.06));
+  color:#fff; box-shadow:none; border-bottom:1px solid rgba(255,255,255,.12);
+}
+body.theme-modern .ctl{
+  width:26px;height:24px;border-radius:6px;background:rgba(255,255,255,.12);color:#fff;border:1px solid rgba(255,255,255,.18);box-shadow:none;
+}
+
+body.theme-modern .content{ color:#fff }
+
+/* Modern theme — buttons (incl. player controls) */
+body.theme-modern .btn-rect{
+  border-radius:10px;
+  border:1px solid rgba(255,255,255,.16);
+  background:rgba(28,28,28,.55);
+  color:#fff;
+  box-shadow:none;
+  padding:6px 12px;
+}
+body.theme-modern .btn-rect.icon{
+  width:36px;
+  height:36px;
+  font-size:18px;
+  line-height:1;
+  padding:0;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  border-radius:10px;
+}
+body.theme-modern .btn-rect:hover{
+  filter:none;
+  transform:translateY(-1px);
+}
+
+/* Responsive: tabs colapsam -> hambúrguer na TOP bar */
 @media (max-width: 1200px){
-  .taskbar{height:48px;padding:6px 8px max(6px, env(safe-area-inset-bottom));gap:6px}
-  /* Hide all task buttons except the hamburger */
-  .taskbar .task-button:not(.mobile-only){display:none !important}
-  /* Show hamburger and keep it on the left where tabs were */
-  .taskbar .mobile-only{display:inline-flex !important; order:0}
-  /* Keep controls on the right */
-  .taskbar .spacer{display:block}
-  .taskbar .task-controls{gap:6px}
-  .theme-select{height:32px;font-size:14px;border-radius:8px}
-  .task-clock{height:32px;min-width:96px;border-radius:8px}
-  /* Window sizing */
-  .win{left:6px;right:6px;width:auto;top:10vh;max-height:calc(100svh - 140px)}
-  .titlebar{padding:8px 10px;height:36px}
-  .window-controls{gap:8px}
-  .ctl{width:28px;height:24px}
-  .content{padding:10px}
-  .player .row{gap:10px}
-  .btn-rect{min-height:32px}
-  .vol{width:100%;max-width:none}
+  .taskbar-top .tabs{ display:none !important }
+  #tb-menu-top{ display:inline-flex !important; align-items:center; justify-content:center; }
 }
 
-/* Garantir que o menu hambúrguer só apareça quando necessário */
-@media (min-width: 1201px){
-  .mobile-only{display:none !important}
-}
-
-/* Mobile completo */
-@media (max-width: 768px){
-  html,body{font-size:15px}
-  .desktop{min-height:100svh}
-  .taskbar{height:56px;padding:8px 8px max(8px, env(safe-area-inset-bottom));gap:6px}
-  .task-button{min-width:64px;height:36px;padding:0 10px;border-radius:8px}
-  .task-controls{gap:6px}
-  .theme-select{height:32px;font-size:14px;border-radius:8px}
-  .task-clock{height:32px;min-width:96px;border-radius:8px}
-  .win{left:6px;right:6px;width:auto;top:10vh;max-height:calc(100svh - 140px)}
-  .titlebar{padding:8px 10px;height:36px}
-  .window-controls{gap:8px}
-  .ctl{width:28px;height:24px}
-  .content{padding:10px}
-  .player .row{gap:10px}
-  .btn-rect{min-height:32px}
-  .vol{width:100%;max-width:none}
-  /* Modern theme performance tweaks on mobile */
-  body.theme-modern .win{backdrop-filter:blur(8px) saturate(110%)}
-  body.theme-modern .taskbar{border-radius:14px}
-}
-
-/* Default (Win98) menu also anchors from the left bottom (matches "Start" behavior) */
-.mobile-menu{ left:8px; right:auto; bottom:64px; }
-
-/* Now Playing (taskbar, entre separadores e controlos) */
+/* Now Playing (na barra superior) */
 .now-playing{
   display:flex; align-items:center; gap:8px;
   font:12px/1.2 Tahoma, "Microsoft Sans Serif", system-ui, -apple-system, Segoe UI, Roboto, Arial;
   color:var(--win-text); background:transparent; padding:0 8px;
-  white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:32vw;
-  border-left:1px solid rgba(0,0,0,.12);
+  white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:42vw;
+  border-left:1px solid rgba(0,0,0,.12); margin-left:auto;
 }
 .now-playing[hidden]{ display:none !important; }
-body.theme-modern .now-playing{
-  color:#fff; border-left:1px solid rgba(255,255,255,.16);
-}
-body.theme-modern .now-playing strong{ opacity:.9 }
+body.theme-modern .now-playing{ color:#fff; border-left:1px solid rgba(255,255,255,.16); }
+.now-playing .np-label{opacity:.85; margin-right:4px}
+.now-playing .np-link{ color:inherit; text-decoration:underline }
+body.theme-modern .now-playing .np-link{ color:#fff; text-decoration:underline }
+.now-playing .np-link:hover{ filter:brightness(1.05) }

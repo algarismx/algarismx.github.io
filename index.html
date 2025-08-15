@@ -8,7 +8,8 @@
   <meta name="description" content="Portfolio of Ricardo Gonçalves Melgar (algarismx) — Sound Designer, Sound Technician and Music Producer in Faro, Portugal.">
   <link rel="stylesheet" href="styles.css" />
 </head>
-<body>
+<body class="theme-modern">
+  <!-- Loader (só avança após escolher idioma) -->
   <div id="preloader">
     <div class="preloader-inner">
       <div class="spinner" aria-label="Loading"></div>
@@ -21,47 +22,82 @@
       </div>
     </div>
   </div>
+
+  <!-- Fundos -->
   <div class="wallpaper" aria-hidden="true"></div>
   <div class="scrim" aria-hidden="true"></div>
 
+  <!-- BARRA SUPERIOR -->
+  <div class="taskbar taskbar-top" role="toolbar">
+    <!-- Hambúrguer só quando tabs colapsam -->
+    <button class="task-button mobile-only" id="tb-menu-top" aria-haspopup="true" aria-expanded="false" aria-controls="mobileMenu" title="Menu">≡</button>
+
+    <div class="tabs">
+      <button class="task-button" id="tb-player" data-open="#win-player" data-i18n="tbPlayer">Player</button>
+      <button class="task-button" id="tb-portfolio" data-open="#win-portfolio" data-i18n="tbPortfolio">Portfolio</button>
+      <button class="task-button" id="tb-etic" data-open="#win-etic" data-i18n="tbEtic">ETIC</button>
+      <button class="task-button" id="tb-pro" data-open="#win-pro" data-i18n="tbPro">Professional</button>
+      <button class="task-button" id="tb-about" data-open="#win-about" data-i18n="tbAbout">About</button>
+      <button class="task-button" id="tb-contact" data-open="#win-contact" data-i18n="tbContact">Contact</button>
+    </div>
+
+    <div id="nowPlaying" class="now-playing" aria-live="polite" hidden>
+      <strong id="npLabel" class="np-label">Now playing:</strong>
+      <a id="npLink" class="np-link" href="https://plaza.one/" target="_blank" rel="noopener">
+        <span id="npText">—</span>
+      </a>
+    </div>
+  </div>
+
+  <!-- Menu colapsado -->
+  <div id="mobileMenu" class="mobile-menu" role="menu" aria-hidden="true">
+    <button class="menu-item" data-open="#win-player" role="menuitem" data-i18n="tbPlayer">Player</button>
+    <button class="menu-item" data-open="#win-portfolio" role="menuitem" data-i18n="tbPortfolio">Portfolio</button>
+    <button class="menu-item" data-open="#win-etic" role="menuitem" data-i18n="tbEtic">ETIC</button>
+    <button class="menu-item" data-open="#win-pro" role="menuitem" data-i18n="tbPro">Professional</button>
+    <button class="menu-item" data-open="#win-about" role="menuitem" data-i18n="tbAbout">About</button>
+    <button class="menu-item" data-open="#win-contact" role="menuitem" data-i18n="tbContact">Contact</button>
+  </div>
+
+  <!-- Desktop / Janelas -->
   <div class="desktop" id="desktop">
     <!-- Player window -->
-    <div class="win hidden" id="win-player" style="top:10vh;left:8vw;width:min(520px,92vw);">
+    <div class="win hidden" id="win-player" style="top:14vh;left:8vw;width:min(520px,92vw);">
       <div class="titlebar" data-drag>
-        <div class="left"><span class="title" id="title-player" data-i18n="titlePlayer">Winamp — plaza.one radio</span></div>
+        <span class="title" id="title-player" data-i18n="titlePlayer">Leitor</span>
         <div class="window-controls">
-          <button class="ctl" data-minimize title="Minimize">–</button>
-          <button class="ctl" data-close="#win-player" title="Close">×</button>
+          <button class="ctl" data-minimize="#win-player" title="Minimize" aria-label="Minimize">—</button>
+          <button class="ctl" data-close="#win-player" title="Close" aria-label="Close">×</button>
         </div>
       </div>
       <div class="content">
         <div class="player" id="player">
           <div class="row">
-            <button class="btn-rect" id="btnPlay" data-i18n="btnPlay">Play</button>
-            <button class="btn-rect" id="btnPause" data-i18n="btnPause">Pause</button>
-            <button class="btn-rect" id="btnStop" data-i18n="btnStop">Stop</button>
+            <button class="btn-rect icon" id="btnPlay" data-i18n="btnPlay" title="Play/Pause" aria-label="Play/Pause">▶</button>
+            <button class="btn-rect icon" id="btnPause" data-i18n="btnPause" title="Pause" aria-label="Pause">❚❚</button>
+            <button class="btn-rect icon" id="btnStop" data-i18n="btnStop" title="Stop" aria-label="Stop">■</button>
             <div class="vu" aria-hidden="true">
-              <div class="bar" id="b1"></div>
-              <div class="bar" id="b2"></div>
-              <div class="bar" id="b3"></div>
-              <div class="bar" id="b4"></div>
-              <div class="bar" id="b5"></div>
+              <div class="bar" id="b1"></div><div class="bar" id="b2"></div><div class="bar" id="b3"></div><div class="bar" id="b4"></div><div class="bar" id="b5"></div>
             </div>
           </div>
           <div class="row">
-            <span class="track" id="trackTitle">https://radio.plaza.one/mp3</span>
-            <input class="vol" id="vol" type="range" min="0" max="1" step="0.01" value="0.6" aria-label="Volume" />
+            <strong id="playerNpLabel" class="np-label">Now playing:</strong>
+            <span class="track" id="trackTitle">—</span>
+            <button class="btn-rect icon speaker speaker-on" id="btnMute" title="Mute / Unmute" aria-label="Mute / Unmute">🔊</button>
           </div>
         </div>
       </div>
+      <div class="resize-handle br" data-resize="br" aria-hidden="true"></div>
+      <div class="resize-handle bl" data-resize="bl" aria-hidden="true"></div>
     </div>
 
-    <!-- Personal Portfolio window -->
-    <div class="win hidden" id="win-portfolio" style="top:18vh;left:22vw;">
+    <!-- Portfolio -->
+    <div class="win hidden" id="win-portfolio" style="top:22vh;left:22vw;">
       <div class="titlebar" data-drag>
         <div class="left"><span class="title" id="title-portfolio" data-i18n="titlePortfolio">Personal Portfolio</span></div>
         <div class="window-controls">
-          <button class="ctl" data-close="#win-portfolio">×</button>
+          <button class="ctl" data-minimize="#win-portfolio" aria-label="Minimize">—</button>
+          <button class="ctl" data-close="#win-portfolio" aria-label="Close">×</button>
         </div>
       </div>
       <div class="content">
@@ -71,14 +107,17 @@
           <div class="item"><strong>Global Game Jam 2023 — <em>Hair We Go!</em></strong><br><span class="muted">SFX and OST (Main Theme, Secondary Menu, Menu).</span></div>
         </div>
       </div>
+      <div class="resize-handle br" data-resize="br"></div>
+      <div class="resize-handle bl" data-resize="bl"></div>
     </div>
 
-    <!-- ETIC window -->
-    <div class="win hidden" id="win-etic" style="top:26vh;left:10vw;">
+    <!-- ETIC -->
+    <div class="win hidden" id="win-etic" style="top:30vh;left:10vw;">
       <div class="titlebar" data-drag>
         <div class="left"><span class="title" id="title-etic" data-i18n="titleEtic">ETIC</span></div>
         <div class="window-controls">
-          <button class="ctl" data-close="#win-etic">×</button>
+          <button class="ctl" data-minimize="#win-etic" aria-label="Minimize">—</button>
+          <button class="ctl" data-close="#win-etic" aria-label="Close">×</button>
         </div>
       </div>
       <div class="content">
@@ -96,14 +135,17 @@
           <div class="item">Erasmus+ — “Sampling Prague”</div>
         </div>
       </div>
+      <div class="resize-handle br" data-resize="br"></div>
+      <div class="resize-handle bl" data-resize="bl"></div>
     </div>
 
-    <!-- Professional window -->
-    <div class="win hidden" id="win-pro" style="top:34vh;left:34vw;">
+    <!-- Professional -->
+    <div class="win hidden" id="win-pro" style="top:38vh;left:34vw;">
       <div class="titlebar" data-drag>
         <div class="left"><span class="title" id="title-pro" data-i18n="titlePro">Professional</span></div>
         <div class="window-controls">
-          <button class="ctl" data-close="#win-pro">×</button>
+          <button class="ctl" data-minimize="#win-pro" aria-label="Minimize">—</button>
+          <button class="ctl" data-close="#win-pro" aria-label="Close">×</button>
         </div>
       </div>
       <div class="content">
@@ -113,15 +155,17 @@
           <div class="item"><strong>Short films and documentaries</strong><br><span class="muted">Sound direction, timecode sync and multi‑monitoring.</span></div>
         </div>
       </div>
+      <div class="resize-handle br" data-resize="br"></div>
+      <div class="resize-handle bl" data-resize="bl"></div>
     </div>
 
-
-    <!-- About window -->
-    <div class="win hidden" id="win-about" style="top:12vh;left:52vw;width:min(760px,92vw);">
+    <!-- About -->
+    <div class="win hidden" id="win-about" style="top:18vh;left:52vw;width:min(760px,92vw);">
       <div class="titlebar" data-drag>
         <div class="left"><span class="title" id="title-about" data-i18n="titleAbout">About</span></div>
         <div class="window-controls">
-          <button class="ctl" data-close="#win-about">×</button>
+          <button class="ctl" data-minimize="#win-about" aria-label="Minimize">—</button>
+          <button class="ctl" data-close="#win-about" aria-label="Close">×</button>
         </div>
       </div>
       <div class="content">
@@ -139,14 +183,17 @@
           </div>
         </div>
       </div>
+      <div class="resize-handle br" data-resize="br"></div>
+      <div class="resize-handle bl" data-resize="bl"></div>
     </div>
 
-    <!-- Contact window -->
-    <div class="win hidden" id="win-contact" style="top:58vh;left:12vw;width:min(540px,92vw);">
+    <!-- Contact -->
+    <div class="win hidden" id="win-contact" style="top:44vh;left:12vw;width:min(540px,92vw);">
       <div class="titlebar" data-drag>
         <div class="left"><span class="title" id="title-contact" data-i18n="titleContact">Contact</span></div>
         <div class="window-controls">
-          <button class="ctl" data-close="#win-contact">×</button>
+          <button class="ctl" data-minimize="#win-contact" aria-label="Minimize">—</button>
+          <button class="ctl" data-close="#win-contact" aria-label="Close">×</button>
         </div>
       </div>
       <div class="content">
@@ -156,163 +203,29 @@
           <li>Instagram: <a href="https://instagram.com/algarismx" target="_blank" rel="noopener noreferrer">@algarismx</a></li>
         </ul>
       </div>
-    </div>
-
-    <!-- Taskbar -->
-    <div class="taskbar" role="toolbar">
-      <button class="task-button" id="tb-player" data-open="#win-player" data-i18n="tbPlayer">Player</button>
-      <button class="task-button" id="tb-portfolio" data-open="#win-portfolio" data-i18n="tbPortfolio">Portfolio</button>
-      <button class="task-button" id="tb-etic" data-open="#win-etic" data-i18n="tbEtic">ETIC</button>
-      <button class="task-button" id="tb-pro" data-open="#win-pro" data-i18n="tbPro">Professional</button>
-      <button class="task-button" id="tb-about" data-open="#win-about" data-i18n="tbAbout">About</button>
-      <button class="task-button" id="tb-contact" data-open="#win-contact" data-i18n="tbContact">Contact</button>
-      
-      <!-- Hamburger (collapses tabs on small widths) -->
-      <button class="task-button mobile-only" id="tb-menu" aria-haspopup="true" aria-expanded="false" aria-controls="mobileMenu" title="Menu">≡</button>
-<div id="nowPlaying" class="now-playing" aria-live="polite" hidden>
-  <strong>Now playing:</strong> <span id="npText">—</span>
-</div>
-      <div class="spacer"></div>
-      <div class="task-controls">
-        <select class="theme-select" id="themeSelect" aria-label="Tema">
-          <option value="win98">Windows 98/ME</option>
-          <option value="modern" selected>Moderno</option>
-        </select>
-        <div class="task-clock" id="taskClock" aria-live="polite" aria-label="Relógio"></div>
-      </div>
-      
-      <!-- Collapsed items (Start-like menu) -->
-      <div id="mobileMenu" class="mobile-menu" role="menu" aria-hidden="true">
-        <button class="menu-item" data-open="#win-player" role="menuitem" data-i18n="tbPlayer">Player</button>
-        <button class="menu-item" data-open="#win-portfolio" role="menuitem" data-i18n="tbPortfolio">Portfolio</button>
-        <button class="menu-item" data-open="#win-etic" role="menuitem" data-i18n="tbEtic">ETIC</button>
-        <button class="menu-item" data-open="#win-pro" role="menuitem" data-i18n="tbPro">Professional</button>
-        <button class="menu-item" data-open="#win-about" role="menuitem" data-i18n="tbAbout">About</button>
-        <button class="menu-item" data-open="#win-contact" role="menuitem" data-i18n="tbContact">Contact</button>
-      </div>
+      <div class="resize-handle br" data-resize="br"></div>
+      <div class="resize-handle bl" data-resize="bl"></div>
     </div>
   </div>
 
-  <div id="kbdHints" class="kbd-hints" aria-hidden="true">Space — Play/Pause · M — Menu · Esc — Close</div>
+  <!-- BARRA INFERIOR -->
+  <div class="taskbar taskbar-bottom" role="toolbar">
+    <div id="kbdHints" class="kbd-hints" aria-hidden="true">Space — Play/Pause · M — Menu · Esc — Close</div>
+    <div class="spacer"></div>
+    <div class="task-controls">
+      <select class="theme-select" id="themeSelect" aria-label="Tema">
+        <option value="win98">Windows 98/ME</option>
+        <option value="modern" selected>Moderno</option>
+      </select>
+      <select class="lang-select" id="langSelect" aria-label="Idioma">
+        <option value="en">EN</option>
+        <option value="pt">PT</option>
+      </select>
+      <div class="task-clock" id="taskClock" aria-live="polite" aria-label="Relógio"></div>
+    </div>
+  </div>
 
   <script src="waves.js"></script>
-  <script>
-    // Aguardar que waves.js carregue completamente
-    window.addEventListener('load', () => {
-      setTimeout(() => {
-        if (window.WavesController) {
-          console.log('Waves loaded successfully');
-          // Attach analyser if already present
-          if (window.WavesController.attachAnalyser && window.appAnalyser) {
-            window.WavesController.attachAnalyser(window.appAnalyser);
-          }
-        } else {
-          console.error('Waves failed to load');
-        }
-      }, 100);
-    });
-  </script>
-  <script>
-  // Minimal non-React port inspired by reactbits.dev/backgrounds/dither
-  (function(){
-    const Bayer8 = [
-      [0,48,12,60,3,51,15,63],
-      [32,16,44,28,35,19,47,31],
-      [8,56,4,52,11,59,7,55],
-      [40,24,36,20,43,27,39,23],
-      [2,50,14,62,1,49,13,61],
-      [34,18,46,30,33,17,45,29],
-      [10,58,6,54,9,57,5,53],
-      [42,26,38,22,41,25,37,21]
-    ];
-    const scale8 = 1/64;
-
-    const defaultPalette = [
-      '#008080', // TEAL clássico Win9x/ME
-      '#20A0A0', // teal + brilhante
-      '#C0C0C0', // cinza UI
-      '#F0F0F0'  // cinza claro
-    ];
-
-    function lerp(a,b,t){ return a + (b-a)*t; }
-    function hexToRgb(h){
-      const m = /^#?([a-f\\d]{2})([a-f\\d]{2})([a-f\\d]{2})$/i.exec(h);
-      return m ? { r: parseInt(m[1],16), g: parseInt(m[2],16), b: parseInt(m[3],16) } : {r:0,g:0,b:0};
-    }
-    function makePalette(cols){ return cols.map(hexToRgb); }
-
-    const DitherController = {
-      _state: null,
-      mount(opts){
-        if (this._state) return;
-        const palette = makePalette((opts && opts.palette) || defaultPalette);
-        const speed = (opts && opts.speed) || 0.06;
-        const noiseScale = (opts && opts.noiseScale) || 0.0018;
-
-        const container = document.createElement('div');
-        container.className = 'dither';
-        const canvas = document.createElement('canvas');
-        container.appendChild(canvas);
-        document.body.appendChild(container);
-        const ctx = canvas.getContext('2d');
-        let w=0,h=0, id=null, t=0;
-
-        function resize(){
-          const r = container.getBoundingClientRect();
-          w = canvas.width = Math.floor(r.width);
-          h = canvas.height = Math.floor(r.height);
-        }
-        function hash(x,y,t){ // pseudo-noise simples
-          const s = Math.sin(x*12.9898 + y*78.233 + t*43758.5453) * 43758.5453;
-          return s - Math.floor(s);
-        }
-        function mix(p1,p2,tt){ return { r: lerp(p1.r,p2.r,tt), g: lerp(p1.g,p2.g,tt), b: lerp(p1.b,p2.b,tt) }; }
-
-        function render(){
-          if (!ctx) return;
-          const img = ctx.createImageData(w,h);
-          const data = img.data;
-          for (let y=0; y<h; y++){
-            for (let x=0; x<w; x++){
-              const i = (y*w + x) * 4;
-              // drift suave entre as cores da paleta
-              const k = (Math.sin((t*speed) + x*noiseScale + y*noiseScale*0.7) * 0.5 + 0.5) * (palette.length-1);
-              const k0 = Math.floor(k);
-              const k1 = Math.min(palette.length-1, k0+1);
-              const frac = k - k0;
-              const col = mix(palette[k0], palette[k1], frac);
-              // limiar de dithering ordenado
-              const thr = Bayer8[y & 7][x & 7] * scale8;
-              const lum = (col.r + col.g + col.b) / (255*3);
-              const on = lum > thr;
-              const r = on ? col.r : 0;
-              const g = on ? col.g : 0;
-              const b = on ? col.b : 0;
-              data[i]=r|0; data[i+1]=g|0; data[i+2]=b|0; data[i+3]=255;
-            }
-          }
-          ctx.putImageData(img,0,0);
-          t += 1;
-          id = requestAnimationFrame(render);
-        }
-
-        function onResize(){ resize(); }
-        resize();
-        id = requestAnimationFrame(render);
-        window.addEventListener('resize', onResize);
-        this._state = { container, id, onResize };
-      },
-      unmount(){
-        const s = this._state; if (!s) return;
-        window.removeEventListener('resize', s.onResize);
-        cancelAnimationFrame(s.id);
-        s.container.remove();
-        this._state = null;
-      }
-    };
-    window.DitherController = DitherController;
-  })();
-</script>
   <script src="app.js"></script>
 </body>
 </html>

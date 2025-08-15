@@ -1,10 +1,9 @@
-// Port of Waves from reactbits.dev/backgrounds/waves (no React)
-// Exposes window.WavesController.mount()/unmount() so we can tie it to theme
-console.log('Waves.js loading...');
+// Waves background (vanilla). Pixel‑art mode for Win98, smooth for Modern.
+// Audio‑reactive via AnalyserNode: call WavesController.attachAnalyser(analyser)
+
 (function(){
-  // Audio-reactive globals
-  let audioAnalyser = null, audioData = null, audioLevel = 0, baseConfig = null;
-  let sensitivity = 0.75;
+  let audioAnalyser = null, audioData = null, audioLevel = 0;
+
   function Grad(x,y,z){ this.x=x; this.y=y; this.z=z; }
   Grad.prototype.dot2=function(x,y){ return this.x*x + this.y*y; };
   function Noise(seed){
@@ -17,105 +16,134 @@ console.log('Waves.js loading...');
   Noise.prototype.lerp=function(a,b,t){ return (1-t)*a + t*b; };
   Noise.prototype.perlin2=function(x,y){ let X=Math.floor(x), Y=Math.floor(y); x-=X; y-=Y; X&=255; Y&=255; const n00=this.gradP[X+this.perm[Y]].dot2(x,y); const n01=this.gradP[X+this.perm[Y+1]].dot2(x,y-1); const n10=this.gradP[X+1+this.perm[Y]].dot2(x-1,y); const n11=this.gradP[X+1+this.perm[Y+1]].dot2(x-1,y-1); const u=this.fade(x); return this.lerp(this.lerp(n00,n10,u), this.lerp(n01,n11,u), this.fade(y)); };
 
-  const WavesController={
-    _state:null,
-    mount(opts){ if (this._state) return; const config=Object.assign({
-      lineColor:'#fff', backgroundColor:'rgba(255,255,255,0.2)', waveSpeedX:0.02, waveSpeedY:0.01,
-      waveAmpX:40, waveAmpY:20, friction:0.9, tension:0.01, maxCursorMove:120, xGap:12, yGap:36
-    }, opts||{});
-    // Store base amplitudes for audio modulation
-    baseConfig = { waveAmpX: config.waveAmpX, waveAmpY: config.waveAmpY };
-    const container=document.createElement('div'); container.className='waves'; container.style.position='fixed'; container.style.inset='0'; container.style.zIndex='-3'; container.style.backgroundColor=config.backgroundColor;
-    const canvas=document.createElement('canvas'); canvas.className='waves-canvas'; container.appendChild(canvas);
-    document.body.appendChild(container);
-    const ctx=canvas.getContext('2d');
-    const bounding={width:0,height:0,left:0,top:0};
-    const noise=new Noise(Math.random());
-    let lines=[], frameId=null;
-    const mouse={ x:-10,y:0,lx:0,ly:0,sx:0,sy:0, v:0,vs:0,a:0,set:false };
-    function setSize(){ const r=container.getBoundingClientRect(); bounding.width=r.width; bounding.height=r.height; canvas.width=r.width; canvas.height=r.height; }
-    function setLines(){ const {width,height}=bounding; lines=[]; const oWidth=width+200, oHeight=height+30; const totalLines=Math.ceil(oWidth/config.xGap); const totalPoints=Math.ceil(oHeight/config.yGap); const xStart=(width - config.xGap*totalLines)/2; const yStart=(height - config.yGap*totalPoints)/2; for(let i=0;i<=totalLines;i++){ const pts=[]; for(let j=0;j<=totalPoints;j++){ pts.push({ x:xStart+config.xGap*i, y:yStart+config.yGap*j, wave:{x:0,y:0}, cursor:{x:0,y:0,vx:0,vy:0} }); } lines.push(pts); } }
-    function movePoints(time){
-      // Audio-reactive: update audioLevel and modulate amplitudes
-      if (audioAnalyser && audioData){
-        audioAnalyser.getByteFrequencyData(audioData);
-        let sum=0; for(let i=0;i<audioData.length;i++) sum+=audioData[i];
-        const avg = sum / audioData.length;
-        audioLevel = Math.min(1, avg / 255);
-      } else { audioLevel = 0; }
-      // Modulate amplitudes
-      const ampX = baseConfig ? baseConfig.waveAmpX * (1 + audioLevel * (0.8 * sensitivity)) : config.waveAmpX;
-      const ampY = baseConfig ? baseConfig.waveAmpY * (1 + audioLevel * (0.8 * sensitivity)) : config.waveAmpY;
-      lines.forEach(pts=>{
-        pts.forEach(p=>{
-          const move=noise.perlin2((p.x+time*config.waveSpeedX)*0.002, (p.y+time*config.waveSpeedY)*0.0015)*12;
-          p.wave.x=Math.cos(move)*ampX;
-          p.wave.y=Math.sin(move)*ampY;
-          const dx=p.x-mouse.sx, dy=p.y-mouse.sy;
-          const dist=Math.hypot(dx,dy), l=Math.max(175, mouse.vs);
-          if(dist<l){
-            const s=1-dist/l;
-            const f=Math.cos(dist*0.001)*s;
-            p.cursor.vx += Math.cos(mouse.a)*f*l*mouse.vs*0.00065;
-            p.cursor.vy += Math.sin(mouse.a)*f*l*mouse.vs*0.00065;
+  function clamp(v,min,max){ return Math.max(min, Math.min(max, v)); }
+  function quant(v, grid){ return grid>1 ? Math.round(v / grid) * grid : v; }
+
+  const WavesController = {
+    _state: null,
+    mount(opts){
+      if (this._state) return;
+      const cfg = Object.assign({
+        backgroundColor: 'transparent',
+        lineColor: '#ffffff',
+        pixelate: false,
+        pixelSize: 6,
+        lineWidth: 1.2,
+        waveSpeedX: 0.02, waveSpeedY: 0.01,
+        waveAmpX: 40, waveAmpY: 20,
+        xGap: 12, yGap: 36
+      }, opts||{});
+
+      const container = document.createElement('div');
+      container.className = 'waves';
+      container.style.backgroundColor = cfg.backgroundColor;
+      const canvas = document.createElement('canvas');
+      canvas.className = 'waves-canvas';
+      container.appendChild(canvas);
+      document.body.appendChild(container);
+
+      const ctx = canvas.getContext('2d');
+      ctx.lineJoin = cfg.pixelate ? 'miter' : 'round';
+      ctx.lineCap  = cfg.pixelate ? 'butt'  : 'round';
+
+      const bounding={width:0,height:0,left:0,top:0};
+      const noise=new Noise(Math.random());
+      let lines=[], frameId=null;
+      const mouse={ x:-10,y:0,lx:0,ly:0,sx:0,sy:0, v:0,vs:0,a:0,set:false };
+
+      function setSize(){ const r=container.getBoundingClientRect(); bounding.width=r.width; bounding.height=r.height; canvas.width=r.width; canvas.height=r.height; }
+      function setLines(){
+        const {width,height}=bounding;
+        lines=[];
+        const oWidth=width+200, oHeight=height+30;
+        const totalLines=Math.ceil(oWidth/cfg.xGap);
+        const totalPoints=Math.ceil(oHeight/cfg.yGap);
+        const xStart=(width - cfg.xGap*totalLines)/2;
+        const yStart=(height - cfg.yGap*totalPoints)/2;
+        for(let i=0;i<=totalLines;i++){
+          const pts=[];
+          for(let j=0;j<=totalPoints;j++){
+            pts.push({ x:xStart+cfg.xGap*i, y:yStart+cfg.yGap*j, wave:{x:0,y:0}, cursor:{x:0,y:0,vx:0,vy:0} });
           }
-          p.cursor.vx += (0-p.cursor.x)*config.tension;
-          p.cursor.vy += (0-p.cursor.y)*config.tension;
-          p.cursor.vx *= config.friction;
-          p.cursor.vy *= config.friction;
-          p.cursor.x += p.cursor.vx*2;
-          p.cursor.y += p.cursor.vy*2;
-          p.cursor.x = Math.min(config.maxCursorMove, Math.max(-config.maxCursorMove, p.cursor.x));
-          p.cursor.y = Math.min(config.maxCursorMove, Math.max(-config.maxCursorMove, p.cursor.y));
+          lines.push(pts);
+        }
+      }
+
+      // Audio
+      let analyser = null, freq = null;
+      function updateAudioLevel(){
+        if (!analyser) { audioLevel = 0; return; }
+        analyser.getByteFrequencyData(freq);
+        let s=0; for(let i=0;i<freq.length;i++) s+=freq[i];
+        audioLevel = clamp(s / (freq.length*255), 0, 1);
+      }
+
+      function movePoints(time){
+        updateAudioLevel();
+        const ampX = cfg.waveAmpX * (1 + audioLevel * 0.9);
+        const ampY = cfg.waveAmpY * (1 + audioLevel * 0.9);
+
+        lines.forEach(pts=>{
+          pts.forEach(p=>{
+            const move=noise.perlin2((p.x+time*cfg.waveSpeedX)*0.002, (p.y+time*cfg.waveSpeedY)*0.0015)*12;
+            p.wave.x=Math.cos(move)*ampX;
+            p.wave.y=Math.sin(move)*ampY;
+          });
         });
-      });
-    }
-    function moved(p, withCursor){ const x=p.x + p.wave.x + (withCursor?p.cursor.x:0); const y=p.y + p.wave.y + (withCursor?p.cursor.y:0); return { x:Math.round(x*10)/10, y:Math.round(y*10)/10 }; }
-    function drawLines(){
-      const {width,height}=bounding;
-      ctx.clearRect(0,0,width,height);
-      ctx.beginPath();
-      // Audio-reactive: line width and alpha
-      ctx.lineWidth = 1 + audioLevel * (1.5 * Math.min(2, sensitivity));
-      const a = Math.min(1, .55 + audioLevel * (0.45 * Math.min(2, sensitivity)));
-      ctx.strokeStyle = `rgba(255,255,255,${a})`;
-      lines.forEach(points=>{
-        let p1=moved(points[0], false);
-        ctx.moveTo(p1.x,p1.y);
-        points.forEach((p,idx)=>{
-          const isLast=idx===points.length-1;
-          p1=moved(p,!isLast);
-          const p2=moved(points[idx+1] || points[points.length-1], !isLast);
-          ctx.lineTo(p1.x,p1.y);
-          if(isLast) ctx.moveTo(p2.x,p2.y);
+      }
+
+      function moved(p){
+        let x = p.x + p.wave.x;
+        let y = p.y + p.wave.y;
+        if (cfg.pixelate){ x = quant(x, cfg.pixelSize); y = quant(y, cfg.pixelSize); }
+        return { x:Math.round(x*10)/10, y:Math.round(y*10)/10 };
+      }
+
+      function drawLines(){
+        const {width,height}=bounding;
+        ctx.clearRect(0,0,width,height);
+        ctx.beginPath();
+        const a = cfg.pixelate ? (0.35 + audioLevel*0.45) : (0.55 + audioLevel*0.35);
+        ctx.lineWidth = (cfg.pixelate?1.0:1.2) + audioLevel*(cfg.pixelate?0.8:1.2);
+        ctx.strokeStyle = cfg.lineColor.includes('#000') ? `rgba(0,0,0,${a})` : `rgba(255,255,255,${a})`;
+
+        lines.forEach(points=>{
+          let p1=moved(points[0]);
+          ctx.moveTo(p1.x,p1.y);
+          points.forEach((p)=>{ p1=moved(p); ctx.lineTo(p1.x,p1.y); });
         });
-      });
-      ctx.stroke();
+        ctx.stroke();
+      }
+
+      function tick(t){ movePoints(t); drawLines(); frameId=requestAnimationFrame(tick); }
+
+      function onResize(){ setSize(); setLines(); }
+      setSize(); setLines(); frameId=requestAnimationFrame(tick);
+      window.addEventListener('resize', onResize);
+
+      this._state={
+        container, canvas, ctx, cfg, frameId, handlers:[onResize],
+        attach(an){
+          analyser = an || null;
+          freq = analyser ? new Uint8Array(analyser.frequencyBinCount) : null;
+        }
+      };
+    },
+
+    unmount(){
+      const s=this._state; if(!s) return;
+      window.removeEventListener('resize', s.handlers[0]);
+      cancelAnimationFrame(s.frameId);
+      s.container.remove();
+      this._state=null;
+    },
+
+    attachAnalyser(an){
+      try{
+        if (this._state && this._state.attach) this._state.attach(an);
+      }catch(e){ console.warn('attachAnalyser error', e); }
     }
-    function tick(t){ mouse.sx += (mouse.x-mouse.sx)*0.1; mouse.sy += (mouse.y-mouse.sy)*0.1; const dx=mouse.x-mouse.lx, dy=mouse.y-mouse.ly; const d=Math.hypot(dx,dy); mouse.v=d; mouse.vs += (d-mouse.vs)*0.1; mouse.vs=Math.min(100, mouse.vs); mouse.lx=mouse.x; mouse.ly=mouse.y; mouse.a=Math.atan2(dy,dx); movePoints(t); drawLines(); frameId=requestAnimationFrame(tick); }
-    function onResize(){ setSize(); setLines(); }
-    function updateMouse(x,y){ const b=container.getBoundingClientRect(); mouse.x=x-b.left; mouse.y=y-b.top; if(!mouse.set){ mouse.sx=mouse.x; mouse.sy=mouse.y; mouse.lx=mouse.x; mouse.ly=mouse.y; mouse.set=true; } }
-    function onMouseMove(e){ updateMouse(e.clientX, e.clientY); }
-    function onTouchMove(e){ const t=e.touches[0]; updateMouse(t.clientX, t.clientY); }
-    setSize(); setLines(); frameId=requestAnimationFrame(tick);
-    window.addEventListener('resize', onResize);
-    window.addEventListener('mousemove', onMouseMove);
-    window.addEventListener('touchmove', onTouchMove, { passive:true });
-    this._state={ container, frameId, handlers:[onResize,onMouseMove,onTouchMove] };
-  },
-  unmount(){ const s=this._state; if(!s) return; window.removeEventListener('resize', s.handlers[0]); window.removeEventListener('mousemove', s.handlers[1]); window.removeEventListener('touchmove', s.handlers[2]); cancelAnimationFrame(s.frameId); s.container.remove(); this._state=null; },
-  attachAnalyser(an){
-    try{
-      audioAnalyser = an || null;
-      audioData = audioAnalyser ? new Uint8Array(audioAnalyser.frequencyBinCount) : null;
-    }catch(e){ console.warn('attachAnalyser error', e); }
-  },
-  setSensitivity(val){
-    const n = Number(val);
-    if (!isNaN(n)) sensitivity = Math.max(0.2, Math.min(5, n));
-  }
   };
+
   window.WavesController = WavesController;
-  console.log('WavesController created:', !!window.WavesController);
-  console.log('WavesController methods:', Object.keys(window.WavesController));
 })();
